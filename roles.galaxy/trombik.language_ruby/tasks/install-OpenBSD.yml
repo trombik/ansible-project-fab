@@ -1,0 +1,12 @@
+---
+
+- name: Install ruby
+  openbsd_pkg:
+    name: "{{ language_ruby_package }}"
+    state: present
+
+- name: Create symlinks
+  # XXX sh on OpenBSD does not have pipefail option
+  shell: "pkg_info -M {{ language_ruby_package | quote }} | grep -E '^[[:space:]]+ln ' | sh -"  # noqa risky-shell-pipe
+  args:
+    creates: /usr/local/bin/ruby

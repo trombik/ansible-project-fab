@@ -1,0 +1,9 @@
+---
+__supervisor_group: root
+__supervisor_package: supervisor
+__supervisor_service: supervisord
+__supervisor_conf_dir: /etc
+__supervisor_conf_d_dir_name: supervisord.d
+__supervisor_unix_socket_dir: /run/supervisor
+__supervisor_pid_dir: /run
+__supervisor_log_dir: /var/log/supervisor

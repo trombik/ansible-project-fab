@@ -1,0 +1,11 @@
+---
+__redis_user: _redis
+__redis_group: _redis
+__redis_package: redis
+__redis_service: redis
+__redis_conf_dir: /etc/redis
+__redis_sentinel_service: sentinel
+__redis_sentinel_conf_file: "{{ __redis_conf_dir }}/sentinel.conf"
+__redis_sentinel_logdir: /var/log/redis
+__redis_db_dir: /var/redis
+__redis_log_filename: redis.log

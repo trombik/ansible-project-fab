@@ -1,0 +1,14 @@
+---
+# handlers file for ansible-role-redis
+
+- name: Restart redis
+  service:
+    name: "{{ __redis_service }}"
+    state: restarted
+    enabled: yes
+
+- name: Restart sentinel
+  service:
+    name: "{{ redis_sentinel_service }}"
+    state: restarted
+    enabled: yes

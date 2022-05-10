@@ -1,0 +1,20 @@
+---
+supervisor_user: root
+supervisor_group: "{{ __supervisor_group }}"
+supervisor_package: "{{ __supervisor_package }}"
+supervisor_log_dir: "{{ __supervisor_log_dir }}"
+supervisor_log_file: "{{ supervisor_log_dir }}/supervisord.log"
+supervisor_service: "{{ __supervisor_service }}"
+supervisor_conf_dir: "{{ __supervisor_conf_dir }}"
+supervisor_conf_file: "{{ supervisor_conf_dir }}/supervisord.conf"
+supervisor_conf_d_dir_name: "{{ __supervisor_conf_d_dir_name }}"
+supervisor_conf_d_dir: "{{ supervisor_conf_dir }}/{{ supervisor_conf_d_dir_name }}"
+supervisor_config: ""
+supervisor_unix_socket_dir: "{{ __supervisor_unix_socket_dir }}"
+supervisor_unix_socket_file: "{{ supervisor_unix_socket_dir }}/supervisor.sock"
+supervisor_pid_dir: "{{ __supervisor_pid_dir }}"
+supervisor_pid_file: "{{ supervisor_pid_dir }}/supervisord.pid"
+supervisor_flags: ""
+supervisor_restart_handler_sleep: 5
+
+# supervisord.pid  supervisor.sock

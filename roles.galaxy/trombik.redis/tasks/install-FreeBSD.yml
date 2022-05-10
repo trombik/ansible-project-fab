@@ -1,0 +1,11 @@
+---
+
+- name: Install redis
+  ansible.builtin.pkgng:
+    name: "{{ redis_package }}"
+    state: present
+
+- name: Install redis_extra_packages
+  ansible.builtin.pkgng:
+    name: "{{ redis_extra_packages }}"
+    state: present

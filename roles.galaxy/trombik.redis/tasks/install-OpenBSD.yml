@@ -1,0 +1,11 @@
+---
+
+- name: Install redis
+  community.general.openbsd_pkg:
+    name: "{{ redis_package }}"
+    state: present
+
+- name: Install redis_extra_packages
+  community.general.openbsd_pkg:
+    name: "{{ redis_extra_packages }}"
+    state: present

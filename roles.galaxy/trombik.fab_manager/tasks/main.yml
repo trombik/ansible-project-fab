@@ -1,0 +1,151 @@
+---
+- name: "Include {{ ansible_os_family }}.yml"
+  include_vars: "{{ lookup('first_found', params) }}"
+  vars:
+    params:
+      files:
+        # XXX ansible version on OpenBSD 6.9 does not have
+        # ansible_distribution_major_version. defaults to
+        # ansible_distribution_version.
+        - "{{ ansible_distribution }}-{{ ansible_distribution_major_version | default(ansible_distribution_version) }}.yml"
+        - "{{ ansible_distribution }}.yml"
+        - "{{ ansible_os_family }}.yml"
+      paths:
+        - vars
+
+- name: "Include install-{{ ansible_os_family }}.yml"
+  include_tasks: "install-{{ ansible_os_family }}.yml"
+
+- name: Create fab_manager_group
+  ansible.builtin.group:
+    name: "{{ fab_manager_group }}"
+
+- name: Create fab_manager_user
+  ansible.builtin.user:
+    name: "{{ fab_manager_user }}"
+    group: "{{ fab_manager_group }}"
+    groups: "{{ fab_manager_groups }}"
+    home: "{{ fab_manager_home }}"
+
+- name: Install fab_manager via git
+  ansible.builtin.git:
+    accept_hostkey: yes
+    clone: yes
+    depth: 1
+    dest: "{{ fab_manager_repo_dir }}"
+    repo: "{{ fab_manager_repo_url }}"
+    version: "{{ fab_manager_repo_version }}"
+    update: no
+  become: yes
+  become_user: "{{ fab_manager_user }}"
+
+- name: Create .env file for development environment
+  ansible.builtin.template:
+    src: env.j2
+    dest: "{{ fab_manager_repo_dir }}/.env"
+    validate: sh -n %s
+    owner: "{{ fab_manager_user }}"
+    group: "{{ fab_manager_group }}"
+    mode: "0640"
+
+- name: Create env file for production environment
+  ansible.builtin.template:
+    src: env.j2
+    dest: "{{ fab_manager_config_dir }}/env"
+    validate: sh -n %s
+    owner: "{{ fab_manager_user }}"
+    group: "{{ fab_manager_group }}"
+    mode: "0640"
+
+- name: Create config/database.yml
+  ansible.builtin.template:
+    src: database.yml.j2
+    dest: "{{ fab_manager_config_dir }}/database.yml"
+    owner: "{{ fab_manager_user }}"
+    group: "{{ fab_manager_group }}"
+    mode: "0640"
+
+- name: Install gems via bundler
+  community.general.bundler:
+    chdir: "{{ fab_manager_repo_dir }}"
+    deployment_mode: yes
+    state: present
+
+- name: Create symlink to yarnpkg on Debian
+  ansible.builtin.file:
+    # XXX Debian does not install yarn as `yarn`
+    # see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=843021#65 for why
+    src: /usr/bin/yarnpkg
+    dest: /usr/bin/yarn
+    state: link
+  when:
+    - ansible_os_family == 'Debian'
+
+- name: Install node modules via yarn
+  # XXX community.general.yarn does not support --frozen-lockfile
+  # https://github.com/ansible-collections/community.general/issues/3109
+  # XXX community.general.yarn always return "changed=true" when no name is
+  # given
+  # https://github.com/ansible-collections/community.general/blob/4309dfda520c67601ea76c4ad86b4b9023b7145b/plugins/modules/packaging/language/yarn.py#L363-L365
+  ansible.builtin.command:
+    cmd: "yarn install --frozen-lockfile"
+    chdir: "{{ fab_manager_repo_dir }}"
+    creates: "{{ fab_manager_repo_dir }}/node_modules"
+  become: yes
+  become_user: "{{ fab_manager_user }}"
+
+- name: Enable fab_manager_db_extensions in PostgreSQL
+  community.postgresql.postgresql_ext:
+    # XXX all the extensions in fab_manager_db_extensions must be marked as
+    # `trusted`, i.e. `trusted = true` in their control files.
+    # see extension/unaccent.control for example. this is available only for
+    # PostgreSQL 13 and later.
+    #
+    # XXX the login user must be `fab_manager_db_user` as a migration script
+    # includes `ALTER EXTENSION pg_trgm UPDATE`, which requires the user to be
+    # the owner of the extension
+    #
+    # XXX possibly, this should be implemented in trombik.postgresql
+    db: "{{ fab_manager_db_name }}"
+    name: "{{ item }}"
+    login_user: "{{ fab_manager_db_user }}"
+    login_password: "{{ fab_manager_db_password }}"
+    login_host: "{{ fab_manager_db_host }}"
+    port: "{{ fab_manager_db_port }}"
+  with_items: "{{ fab_manager_db_extensions }}"
+
+- name: Run rails db:create
+  ansible.builtin.shell: "bundle exec rails db:create && touch {{ fab_manager_repo_dir }}/.rails_db_create"
+  args:
+    chdir: "{{ fab_manager_repo_dir }}"
+    creates: "{{ fab_manager_repo_dir }}/.rails_db_create"
+  become: yes
+  become_user: "{{ fab_manager_user }}"
+
+
+- name: Run rails db:migrate
+  ansible.builtin.shell: "bundle exec rails db:migrate && touch {{ fab_manager_repo_dir }}/.rails_db_migrate"
+  args:
+    chdir: "{{ fab_manager_repo_dir }}"
+    creates: "{{ fab_manager_repo_dir }}/.rails_db_migrate"
+  become: yes
+  become_user: "{{ fab_manager_user }}"
+
+- name: Run rails db:seed
+  ansible.builtin.shell: "bundle exec rails db:seed && touch {{ fab_manager_repo_dir }}/.rails_db_seed"
+  args:
+    chdir: "{{ fab_manager_repo_dir }}"
+    creates: "{{ fab_manager_repo_dir }}/.rails_db_seed"
+  become: yes
+  become_user: "{{ fab_manager_user }}"
+  environment: "{{ fab_manager_env }}"
+
+- name: Create assets
+  # see https://raw.githubusercontent.com/sleede/fab-manager/master/setup/setup.sh
+  ansible.builtin.command:
+    cmd: "bundle exec rake assets:precompile"
+    chdir: "{{ fab_manager_repo_dir }}"
+    creates: "{{ fab_manager_repo_dir }}/public/packs/manifest.json"
+  become: yes
+  become_user: "{{ fab_manager_user }}"
+  environment: "{{ fab_manager_env }}"

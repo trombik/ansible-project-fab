@@ -1,0 +1,26 @@
+---
+galaxy_info:
+  role_name: supervisor
+  author: Tomoyuki Sakurai
+  description: Configures supervisor
+  company: N/A
+  license: BSD
+  min_ansible_version: 2.0
+  platforms:
+    - name: FreeBSD
+      versions:
+        - 13.0
+    - name: OpenBSD
+      versions:
+        - 7.0
+    - name: Ubuntu
+      versions:
+        - focal
+    - name: Fedora
+      versions:
+        - 35
+    - name: Devuan
+      versions:
+        - 3
+  galaxy_tags:
+    - system

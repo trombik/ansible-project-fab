@@ -1,0 +1,9 @@
+---
+__fab_manager_packages:
+  - ruby-devel
+  - gcc
+  - gcc-c++
+  - libpq-devel
+  - ImageMagick
+  - nodejs
+  - yarnpkg

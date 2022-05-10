@@ -1,0 +1,78 @@
+---
+# tasks file for ansible-role-supervisor
+
+- name: "Include vars/{{ ansible_os_family }}.yml"
+  include_vars: "{{ ansible_os_family }}.yml"
+
+- name: "Include install-{{ ansible_os_family }}.yml"
+  include: "install-{{ ansible_os_family }}.yml"
+
+- name: Create supervisor_conf_dir
+  ansible.builtin.file:
+    path: "{{ supervisor_conf_dir }}"
+    mode: "0755"
+    owner: "{{ supervisor_user }}"
+    group: "{{ supervisor_group }}"
+    state: directory
+  when:
+    - supervisor_conf_dir != "/etc"
+
+- name: Create supervisor_conf_d_dir
+  ansible.builtin.file:
+    path: "{{ supervisor_conf_d_dir }}"
+    mode: "0755"
+    owner: "{{ supervisor_user }}"
+    group: "{{ supervisor_group }}"
+    state: directory
+
+- name: Create supervisor_unix_socket_dir
+  ansible.builtin.file:
+    path: "{{ supervisor_unix_socket_dir }}"
+    mode: "0755"
+    owner: "{{ supervisor_user }}"
+    group: "{{ supervisor_group }}"
+    state: directory
+  when:
+    - supervisor_unix_socket_dir != '/var/run'
+    - supervisor_unix_socket_dir != '/run'
+
+- name: Create supervisor_log_dir
+  ansible.builtin.file:
+    path: "{{ supervisor_log_dir }}"
+    mode: "0755"
+    owner: "{{ supervisor_user }}"
+    group: "{{ supervisor_group }}"
+    state: directory
+
+- name: Create log directory
+  file:
+    path: "{{ supervisor_log_dir }}"
+    mode: 0755
+    owner: "{{ supervisor_user }}"
+    group: "{{ supervisor_group }}"
+    state: directory
+  notify: Restart supervisor
+
+- name: Create supervisor_pid_dir directory
+  file:
+    path: "{{ supervisor_pid_dir }}"
+    mode: 0755
+    owner: "{{ supervisor_user }}"
+    group: "{{ supervisor_group }}"
+    state: directory
+  notify: Restart supervisor
+  when:
+    - supervisor_pid_dir != '/var/run'
+    - supervisor_pid_dir != '/run'
+
+- name: Create supervisord.conf
+  template:
+    src: supervisord.conf.j2
+    dest: "{{ supervisor_conf_file }}"
+    validate: echo %s
+  notify: Restart supervisor
+
+- name: Start supervisor
+  service:
+    name: "{{ supervisor_service }}"
+    state: started

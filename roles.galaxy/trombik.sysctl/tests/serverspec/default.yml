@@ -1,0 +1,8 @@
+---
+- hosts: localhost
+  roles:
+    - ansible-role-sysctl
+  vars:
+    sysctl:
+      net.inet.ip.forwarding: 1
+      kern.maxfiles: 20000

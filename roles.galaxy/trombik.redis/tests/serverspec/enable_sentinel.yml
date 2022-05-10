@@ -1,0 +1,50 @@
+---
+- hosts: localhost
+  roles:
+    - ansible-role-redis
+  vars:
+    redis_password: password
+    redis_config: |
+      databases 17
+      save 900 1
+      requirepass "{{ redis_password }}"
+      bind 127.0.0.1 {{ ansible_all_ipv4_addresses | join(" ") }}
+      #"
+      protected-mode yes
+      port {{ redis_port }}
+      timeout 0
+      tcp-keepalive 300
+      daemonize yes
+      pidfile /var/run/redis/{{ redis_service }}.pid
+      loglevel notice
+      logfile {{ redis_log_file }}
+      always-show-logo no
+      dbfilename dump.rdb
+      dir {{ redis_db_dir }}/
+    os_redis_extra_packages:
+      FreeBSD: []
+      Debian:
+        - redis-sentinel
+      RedHat: []
+      OpenBSD: []
+    redis_extra_packages: "{{ os_redis_extra_packages[ansible_os_family] }}"
+    redis_sentinel_enable: true
+    redis_sentinel_password: password
+    redis_sentinel_master_name: my_database
+    redis_sentinel_group:
+      - "{{ ansible_default_ipv4['address'] }}"
+    # XXX use non-default values for these because sentinel removes these
+    # config from sentinel.conf if the values of these are identical to the
+    # default
+    #
+    # this is not recommended but is here for testing purpose
+    redis_sentinel_parallel_syncs: 2
+    redis_sentinel_failover_timeout: 180001
+    redis_sentinel_config: |
+      port {{ redis_sentinel_port }}
+      bind 127.0.0.1 {{ ansible_all_ipv4_addresses | join(' ') }}
+      user default on >password ~* &* +@all
+      protected-mode no
+      dir /tmp
+      logfile {{ redis_sentinel_logfile }}
+      sentinel auth-pass {{ redis_sentinel_master_name }} {{ redis_sentinel_password }}

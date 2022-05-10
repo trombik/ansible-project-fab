@@ -1,0 +1,37 @@
+---
+# defaults file for ansible-role-redis
+redis_user: "{{ __redis_user }}"
+redis_group: "{{ __redis_group }}"
+redis_package: "{{ __redis_package }}"
+redis_extra_packages: []
+redis_service: "{{ __redis_service }}"
+redis_conf_dir: "{{ __redis_conf_dir }}"
+redis_conf_file: "{{ redis_conf_dir }}/redis.conf"
+redis_conf_file_ansible: "{{ redis_conf_file }}.ansible"
+redis_port: 6379
+redis_log_dir: /var/log/redis
+redis_log_filename: "{{ __redis_log_filename }}"
+redis_log_file: "{{ redis_log_dir }}/{{ redis_log_filename }}"
+
+redis_enable: yes
+
+redis_config: ""
+redis_db_dir: "{{ __redis_db_dir }}"
+
+redis_sentinel_group: []
+redis_sentinel_service: "{{ __redis_sentinel_service }}"
+redis_sentinel_conf_file: "{{ __redis_sentinel_conf_file }}"
+redis_sentinel_conf_file_ansible: "{{ redis_sentinel_conf_file }}.ansible"
+redis_sentinel_enable: false
+
+redis_sentinel_password: ""
+redis_sentinel_master_name: ""
+redis_sentinel_master_port: 6379
+redis_sentinel_quorum: 2
+redis_sentinel_parallel_syncs: 1
+redis_sentinel_down_after_milliseconds: 5000
+redis_sentinel_failover_timeout: 180000
+redis_sentinel_logdir: "{{ __redis_sentinel_logdir }}"
+redis_sentinel_logfile: "{{ redis_sentinel_logdir }}/sentinel.log"
+redis_sentinel_port: 26379
+redis_sentinel_config: ""

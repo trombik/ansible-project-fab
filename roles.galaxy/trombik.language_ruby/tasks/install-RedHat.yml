@@ -1,0 +1,10 @@
+---
+
+- name: Install ruby
+  yum:
+    name: "{{ language_ruby_package }}"
+    state: present
+
+- name: Install bundler
+  ansible.builtin.yum:
+    name: "{{ language_ruby_bundler_package }}"

@@ -1,0 +1,27 @@
+---
+postgresql_user: "{{ __postgresql_user }}"
+postgresql_group: "{{ __postgresql_group }}"
+postgresql_db_dir: "{{ __postgresql_db_dir }}"
+postgresql_service: "{{ __postgresql_service }}"
+postgresql_package: "{{ __postgresql_package }}"
+postgresql_extra_packages: []
+postgresql_conf_dir: "{% if ansible_os_family == 'Debian' %}/etc/postgresql/{{ postgresql_major_version }}/main{% else %}{{ postgresql_db_dir }}{% endif %}"
+postgresql_conf_file: "{{ postgresql_conf_dir }}/postgresql.conf"
+postgresql_config: ""
+postgresql_pg_hba_conf_file: "{{ postgresql_conf_dir }}/pg_hba.conf"
+postgresql_pg_hba_config: ""
+postgresql_flags: ""
+postgresql_major_version: "{{ __postgresql_major_version }}"
+postgresql_initdb_flags: ""
+postgresql_debug: no
+postgresql_home_dir: "{{ __postgresql_home_dir }}"
+postgresql_initial_password: ""
+postgresql_initial_password_file: "{{ postgresql_home_dir }}/.pw"
+postgresql_default_auth_method: "{{ __postgresql_default_auth_method }}"
+postgresql_default_login_user: "{{ postgresql_user }}"
+postgresql_default_login_password: "{{ postgresql_initial_password }}"
+postgresql_default_login_host: 127.0.0.1
+postgresql_default_login_db: "{{ __postgresql_default_login_db }}"
+postgresql_users: []
+postgresql_databases: []
+postgresql_initdb_env: {}

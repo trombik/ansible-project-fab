@@ -1,0 +1,199 @@
+---
+
+# TODO
+# - auth
+- name: Create config dir for redis
+  # when failover takes place, the config file is dinamycally overwritten by
+  # redis user. the directory must be writable by the user.
+  ansible.builtin.file:
+    path: "{{ redis_conf_dir }}"
+    mode: "0755"
+    owner: "{{ redis_user }}"
+    group: "{{ redis_group }}"
+    state: directory
+
+- name: Create DB directory
+  ansible.builtin.file:
+    path: "{{ redis_db_dir }}"
+    mode: "0755"
+    owner: "{{ redis_user }}"
+    group: "{{ redis_group }}"
+    state: directory
+
+- name: Register redis_conf_file_ansible
+  # see if this is the first ansible-play.
+  ansible.builtin.stat:
+    path: "{{ redis_conf_file_ansible }}"
+  register: redis_conf_file_ansible_result
+
+- name: See if redis_conf_file exists
+  ansible.builtin.stat:
+    path: "{{ redis_conf_file }}"
+  register: register_redis_conf_file
+
+- name: Create redis_conf_file if it does not exist
+  ansible.builtin.file:
+    path: "{{ redis_conf_file }}"
+    state: touch
+  when: not register_redis_conf_file.stat.exists
+
+- name: Make redis_conf_file editable by redis
+  ansible.builtin.file:
+    path: "{{ redis_conf_file }}"
+    owner: "{{ redis_user }}"
+    group: "{{ redis_group }}"
+    state: file
+
+- name: Register is_master is true
+  set_fact:
+    redis_fact_is_master: true
+  changed_when: false
+  when: redis_sentinel_enable and
+        (
+          redis_sentinel_group[0] in ansible_all_ipv4_addresses or
+          redis_sentinel_group[0] == ansible_fqdn or
+          redis_sentinel_group[0] == ansible_hostname
+        )
+
+- name: Register is_master is false
+  set_fact:
+    redis_fact_is_master: false
+  changed_when: false
+  when: not redis_fact_is_master is defined
+
+- name: See if a slaveof line already exists in the main Redis config
+  ansible.builtin.shell:
+    cmd: "grep '^slaveof' {{ redis_conf_file }} || true"
+  changed_when: false
+  register: redis_register_main_config_slaveof
+
+- name: Register redis_fact_has_slaveof is true
+  set_fact:
+    redis_fact_has_slaveof: true
+  changed_when: false
+  when: redis_register_main_config_slaveof.stdout
+
+- name: Register redis_fact_has_slaveof is false
+  set_fact:
+    redis_fact_has_slaveof: false
+  changed_when: false
+  when: not redis_fact_has_slaveof is defined
+
+- name: Remove default save lines from the main Redis config
+  ansible.builtin.lineinfile:
+    regexp: '^save'
+    dest: '{{ redis_conf_file }}'
+    state: 'absent'
+  register: redis_register_remove_saves
+  when: not redis_conf_file_ansible_result.stat.exists
+  notify: Restart redis
+
+- name: Remove include line only if removing the save lines changed
+  ansible.builtin.lineinfile:
+    regexp: '^include {{ redis_conf_file_ansible }}'
+    dest: '{{ redis_conf_file }}'
+    state: 'absent'
+  when: redis_register_remove_saves is defined and redis_register_remove_saves.changed
+  notify: Restart redis
+
+- set_fact:
+    redis_config_save_keys: "{{ redis_config | regex_search('save \\d+\\s+\\d+') }}"
+
+- ansible.builtin.assert:
+    msg: You need at least one `save` in redis.conf
+    that:
+      - redis_config_save_keys | length > 0
+
+- name: Insert save lines to the main Redis config
+  ansible.builtin.lineinfile:
+    regexp: '^{{ item }}'
+    dest: '{{ redis_conf_file }}'
+    line: "{{ item }}"
+    state: 'present'
+  when: redis_config_save_keys | length > 0
+  with_items: '{{ redis_config_save_keys }}'
+  notify: Restart redis
+
+- name: Insert include line before the first save line to the main Redis config
+  ansible.builtin.lineinfile:
+    regexp: '^include {{ redis_conf_file_ansible }}'
+    dest: '{{ redis_conf_file }}'
+    line: 'include {{ redis_conf_file_ansible }}'
+    insertbefore: "{{ redis_config_save_keys[0] }}"
+    state: present
+  notify: Restart redis
+
+- name: Detect the real master from Redis Sentinel
+  # XXX galaxy warns that
+  # [E306] Shells that use pipes should set the pipefail option
+  # but pipefail is not a standard
+  #
+  # all nodes must know who is the master when:
+  #
+  # - sentinel is enabled
+  # - the node is a slave
+  # - no slaveof is found in redis.conf
+  ansible.builtin.shell: "redis-cli -h {{ redis_sentinel_group[0] }} -p {{ redis_sentinel_config_merged['port'] }} info | grep 'address=' | awk -F 'address=' '{print $2}' | tr ',' '\n' | grep ':' | awk -F ':' '{print $1}'"
+  changed_when: False
+  when: redis_sentinel_enable and
+        not redis_fact_is_master and
+        not redis_fact_has_slaveof
+  register: redis_register_real_master
+
+- name: Make sure redis-cli returns successfully
+  # redis-cli returns zero exit status but the result can be a failure
+  #
+  # XXX galaxy warns that
+  # [E602] Don't compare to empty string
+  # see https://github.com/ansible/ansible-lint/issues/457
+  ansible.builtin.assert:
+    that:
+      - redis_register_real_master.stderr == ''
+  when: "'stderr' in redis_register_real_master"
+
+- name: Insert the real slaveof to all slaves
+  # slaveof must be in redis.conf, not in resid.conf.ansible because:
+  #
+  # - slaveof is inserted by redis user
+  # - redis fails to start when same master is both in the files
+  #
+  # insert slaveof when:
+  #
+  # - when sentinel is enabled
+  # - the node is a slave
+  # - no slaveof in redis.conf
+  ansible.builtin.lineinfile:
+    regexp: '^slaveof'
+    dest: "{{ redis_conf_file }}"
+    line: "slaveof {{ redis_register_real_master.stdout }} {{ redis_port }}"
+    insertafter: 'EOF'
+    state: 'present'
+  when:
+    - redis_sentinel_enable
+    - not redis_fact_is_master
+    - not redis_fact_has_slaveof
+  notify: Restart redis
+
+- name: Create redis.conf.ansible
+  ansible.builtin.template:
+    src: redis.conf.j2
+    dest: "{{ redis_conf_file_ansible }}"
+    mode: "0644"
+    owner: "{{ redis_user }}"
+    group: "{{ redis_group }}"
+  notify: Restart redis
+
+- name: Ensure log dir exists
+  ansible.builtin.file:
+    path: "{{ redis_log_dir }}"
+    owner: "{{ redis_user }}"
+    group: "{{ redis_group }}"
+    mode: "0755"
+    state: directory
+  notify: Restart redis
+
+- name: Start redis
+  ansible.builtin.service:
+    name: "{{ redis_service }}"
+    enabled: yes
+    state: started

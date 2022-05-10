@@ -1,0 +1,35 @@
+---
+
+- hosts: localhost
+  roles:
+    - ansible-role-supervisor
+  vars:
+    os_supervisor_flags:
+      OpenBSD: "-c {{ supervisor_conf_file }}"
+      FreeBSD: |
+        supervisord_config="{{ supervisor_conf_file }}"
+        supervisord_user="{{ supervisor_user }}"
+    # "
+    supervisor_flags: "{{ os_supervisor_flags[ansible_os_family] | default('') }}"
+    supervisor_config: |
+      [unix_http_server]
+      file={{ supervisor_unix_socket_file }}
+
+      [supervisord]
+      logfile={{ supervisor_log_file }}
+      logfile_maxbytes=50MB
+      logfile_backups=10
+      loglevel=info
+      pidfile={{ supervisor_pid_file }}
+      nodaemon=false
+      minfds=1024
+      minprocs=200
+
+      [rpcinterface:supervisor]
+      supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+
+      [supervisorctl]
+      serverurl=unix://{{ supervisor_unix_socket_file }}
+
+      [include]
+      files = {{ supervisor_conf_d_dir }}/*.conf

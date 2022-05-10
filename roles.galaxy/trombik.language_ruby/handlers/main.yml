@@ -1,0 +1,6 @@
+---
+
+- name: Restart language-ruby
+  service:
+    name: language-ruby
+    state: restarted

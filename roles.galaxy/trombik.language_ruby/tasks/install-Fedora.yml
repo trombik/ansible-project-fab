@@ -1,0 +1,11 @@
+---
+
+- name: Install ruby
+  ansible.builtin.dnf:
+    name: "{{ language_ruby_package }}"
+    state: present
+
+- name: Install bundler
+  ansible.builtin.dnf:
+    name: "{{ language_ruby_bundler_package }}"
+    state: present

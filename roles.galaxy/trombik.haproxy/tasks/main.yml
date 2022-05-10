@@ -1,0 +1,53 @@
+---
+# tasks file for ansible-role-haproxy
+
+- name: "Include OS-specific variables"
+  include_vars: "{{ lookup('first_found', params) }}"
+  vars:
+    params:
+      files:
+        # XXX ansible version on OpenBSD 6.9 does not have
+        # ansible_distribution_major_version. defaults to
+        # ansible_distribution_version.
+        - "{{ ansible_distribution }}-{{ ansible_distribution_major_version | default(ansible_distribution_version) }}.yml"
+        - "{{ ansible_distribution }}.yml"
+        - "{{ ansible_os_family }}.yml"
+      paths:
+        - vars
+
+- name: Do fail when haproxy_x509_certificate is used
+  fail:
+    msg: "haproxy_x509_certificate is deprecated, use haproxy_x509_certificate_vars instead"
+  when:
+    - haproxy_x509_certificate is defined
+
+- name: Do fail when haproxy_x509_certificate_debug_log is used
+  fail:
+    msg: "haproxy_x509_certificate_debug_log is deprecated, use haproxy_x509_certificate_vars instead"
+  when:
+    - haproxy_x509_certificate_debug_log is defined
+
+
+- name: "Include install-{{ ansible_os_family }}.yml"
+  include: "install-{{ ansible_os_family }}.yml"
+
+- name: Include trombik.x509_certificate
+  include_role:
+    name: trombik.x509_certificate
+  vars:
+    x509_certificate_vars: "{{ haproxy_x509_certificate_vars }}"
+  when:
+    - haproxy_x509_certificate_enable
+
+- name: Create haproxy.conf
+  ansible.builtin.template:
+    src: haproxy.conf.j2
+    dest: "{{ haproxy_conf_file }}"
+    validate: haproxy -c -f %s
+    mode: "0644"
+  notify: Restart haproxy
+
+- name: Start haproxy
+  ansible.builtin.service:
+    name: "{{ haproxy_service }}"
+    state: started

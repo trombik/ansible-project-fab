@@ -1,0 +1,4 @@
+---
+__language_ruby_package: "@ruby:2.7/default"
+__language_ruby_bundler_package: rubygem-bundler
+__language_ruby_gem_package: ""

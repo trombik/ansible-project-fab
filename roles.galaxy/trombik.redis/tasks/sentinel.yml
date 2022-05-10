@@ -1,0 +1,112 @@
+---
+
+- name: "Include configure-sentinel-{{ ansible_os_family }}.yml"
+  include: "configure-sentinel-{{ ansible_os_family }}.yml"
+
+- name: Create redis_conf_dir directory
+  ansible.builtin.file:
+    path: "{{ redis_conf_dir }}"
+    owner: "{{ redis_user }}"
+    group: "{{ redis_group }}"
+    mode: "0755"
+    state: directory
+
+- name: Ensure sentinel.conf exists
+  ansible.builtin.file:
+    path: "{{ redis_sentinel_conf_file }}"
+    state: touch
+  changed_when: false
+
+- name: Ensure sentnel.conf is writable by redis_user
+  # as sentinel.conf is modified by redis, it must be owned by the user
+  ansible.builtin.file:
+    path: "{{ redis_sentinel_conf_file }}"
+    owner: "{{ redis_user }}"
+    group: "{{ redis_group }}"
+    mode: "0644"
+
+- name: See if redis_sentinel_conf_file_ansible exists
+  # if the result is true, it means it is the first ansible-play
+  ansible.builtin.stat:
+    path: "{{ redis_sentinel_conf_file_ansible }}"
+  register: redis_sentinel_conf_file_ansible_stat_result
+
+- name: Inject monitor lines to sentinel.conf
+  # "sentinel monitor" line cannot be in included files because:
+  #
+  # * the documentation states that "Redis always uses the last processed line
+  #   as value of a configuration directive"
+  # * but in reality, it complains "Duplicated master name" if "sentinel
+  #   monitor" is in a included file, and another one which redis dinamically
+  #   generates on runtime
+  #
+  # this task should be performed only when ansible plays for the first time
+  ansible.builtin.lineinfile:
+    regexp: "^sentinel monitor {{ redis_sentinel_master_name }} {{ redis_sentinel_group[0] }}"
+    dest: "{{ redis_sentinel_conf_file }}"
+    line: "sentinel monitor {{ redis_sentinel_master_name }} {{ redis_sentinel_group[0] }} {{ redis_sentinel_master_port }} {{ redis_sentinel_quorum }}"
+    state: present
+  when: not redis_sentinel_conf_file_ansible_stat_result.stat.exists
+  notify: Restart sentinel
+
+- name: Inject down-after-milliseconds to sentinel.conf
+  ansible.builtin.lineinfile:
+    regexp: "^sentinel down-after-milliseconds {{ redis_sentinel_master_name }} {{ redis_sentinel_down_after_milliseconds }}"
+    dest: "{{ redis_sentinel_conf_file }}"
+    line: "sentinel down-after-milliseconds {{ redis_sentinel_master_name }} {{ redis_sentinel_down_after_milliseconds }}"
+    state: present
+  when: not redis_sentinel_conf_file_ansible_stat_result.stat.exists
+  notify: Restart sentinel
+
+- name: Inject parallel-syncs to sentinel.conf
+  ansible.builtin.lineinfile:
+    regexp: "^sentinel parallel-syncs {{ redis_sentinel_master_name }} {{ redis_sentinel_parallel_syncs }}"
+    dest: "{{ redis_sentinel_conf_file }}"
+    line: "sentinel parallel-syncs {{ redis_sentinel_master_name }} {{ redis_sentinel_parallel_syncs }}"
+    state: present
+  when: not redis_sentinel_conf_file_ansible_stat_result.stat.exists
+  notify: Restart sentinel
+
+- name: Inject failover-timeout to sentinel.conf
+  ansible.builtin.lineinfile:
+    regexp: "^sentinel failover-timeout {{ redis_sentinel_master_name }} {{ redis_sentinel_failover_timeout }}"
+    dest: "{{ redis_sentinel_conf_file }}"
+    line: "sentinel failover-timeout {{ redis_sentinel_master_name }} {{ redis_sentinel_failover_timeout }}"
+    state: present
+  when: not redis_sentinel_conf_file_ansible_stat_result.stat.exists
+  notify: Restart sentinel
+
+- name: include redis_sentinel_conf_file_ansible in sentinel.conf
+  # make sure sentinel.conf.ansible is included
+  ansible.builtin.lineinfile:
+    dest: "{{ redis_sentinel_conf_file }}"
+    regexp: "^include "
+    line: "include {{ redis_sentinel_conf_file_ansible }}"
+    insertafter: EOF
+    state: present
+  changed_when: false
+  notify: Restart sentinel
+
+- name: Create sentinel.conf.ansible
+  # this file is static one and all static configuration should go in to it.
+  ansible.builtin.template:
+    dest: "{{ redis_sentinel_conf_file_ansible }}"
+    src: sentinel.conf.j2
+    mode: "0640"
+    owner: "{{ redis_user }}"
+    group: "{{ redis_group }}"
+  notify: Restart sentinel
+
+- name: Create logdir
+  ansible.builtin.file:
+    path: "{{ redis_sentinel_logdir }}"
+    owner: "{{ redis_user }}"
+    group: "{{ redis_group }}"
+    mode: "0755"
+    state: directory
+
+- name: Start sentinel
+  ansible.builtin.service:
+    name: "{{ redis_sentinel_service }}"
+    enabled: yes
+    state: started

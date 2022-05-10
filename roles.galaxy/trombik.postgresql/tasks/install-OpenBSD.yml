@@ -1,0 +1,22 @@
+---
+
+- name: "Install {{ postgresql_package }}"
+  ansible.builtin.openbsd_pkg:
+    name: "{{ postgresql_package }}"
+    state: present
+
+- name: Install postgresql_extra_packages
+  ansible.builtin.openbsd_pkg:
+    name: "{{ postgresql_extra_packages }}"
+    state: present
+
+- name: Install psycopg2
+  ansible.builtin.openbsd_pkg:
+    name: "py{{ ansible_python.version.major }}-psycopg2"
+    state: present
+
+- name: Enable postgresql
+  ansible.builtin.service:
+    name: "{{ postgresql_service }}"
+    arguments: "{{ postgresql_flags }}"
+    enabled: yes

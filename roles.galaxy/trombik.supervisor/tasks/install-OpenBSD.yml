@@ -1,0 +1,12 @@
+---
+
+- name: Install supervisor_package
+  community.general.openbsd_pkg:
+    name: "{{ supervisor_package }}"
+    state: present
+
+- name: Enable supervisor_service
+  ansible.builtin.service:
+    name: "{{ supervisor_service }}"
+    enabled: yes
+    arguments: "{{ supervisor_flags }}"

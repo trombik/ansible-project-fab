@@ -1,0 +1,127 @@
+require "rake"
+require "rspec/core/rake_task"
+require "tempfile"
+require "pathname"
+
+ENV["TERM"] = "xterm" # XXX TERM must be defined or pkg_add fails
+
+test_dir = Pathname.new(__FILE__).dirname
+role_dir = Pathname.new(test_dir).parent.parent.parent
+role_name = Pathname.new(role_dir).basename
+
+def vagrant(cmd)
+  Bundler.with_clean_env do
+    sh "vagrant #{cmd}"
+  end
+end
+
+task default: %w[test]
+
+desc "run rspec"
+task test: [:clean, :prepare, :do_test, :ensure_clean] do
+end
+
+desc "clean"
+task clean: [:clean_vagrant, :clean_role] do
+end
+
+desc "destroy vagrant nodes"
+task :clean_vagrant do
+  # XXX `vagrant destroy` failes with exit status 1 when there is no VM to
+  # destroy
+  vagrant "destroy -f || true"
+end
+
+desc "rm roles/*"
+task :clean_role do
+  sh "rm -rf roles/*"
+  sh "rm -f *.retry"
+end
+
+desc "prepare the test environment"
+task prepare: [:prepare_role, :prepare_roles, :vagrant_up] do
+end
+
+desc "import required roles"
+task :prepare_roles do
+  sh "ansible-galaxy install -r requirements.yml -p roles"
+end
+
+desc "prepare role"
+task :prepare_role do
+  ignore = %w[vendor .kitchen .git tests spec].map { |f| "#{role_name}/#{f}" }
+  tmpfile = Tempfile.new(".tarignore")
+  tmpfile.write ignore.join("\n")
+  tmpfile.close
+  # rubocop:disable Metrics/LineLength
+  sh "tar -c -X #{tmpfile.path} -C #{role_dir.parent} -f - #{role_name} | " + "tar -x -C #{test_dir}/roles -f -"
+  # rubocop:enable Metrics/LineLength
+end
+
+desc "vagrant up"
+task :vagrant_up do
+  vagrant "up"
+end
+
+desc "do clean task even if it has been executed"
+task :ensure_clean do
+  Rake::Task["clean"].all_prerequisite_tasks.each(&:reenable)
+  Rake::Task["clean"].reenable
+  Rake::Task["clean"].invoke
+end
+
+def stories
+  directories = []
+  Dir.glob("./spec/stories/*").each do |dir|
+    next unless File.directory?(dir)
+    directories << File.basename(dir)
+  end
+  directories
+end
+
+def spec_files_in_story(story)
+  Dir.glob("./spec/stories/#{story}/*_spec.rb").sort
+end
+
+def task_of_spec(spec)
+  file = File.basename(spec)
+  # 000_192.168.90.100_spec.rb
+  File.basename(file).gsub("_spec.rb", "").tr(".", "_")
+end
+
+def target_of_spec(spec)
+  name = File.basename(spec)
+  _number, target, _rest = name.split("_")
+  target
+end
+
+def index_of_spec(spec)
+  name = File.basename(spec)
+  number, _target, _rest = name.split("_")
+  number
+end
+
+def all_tasks_in_story(story)
+  files = spec_files_in_story(story)
+  files.map { |f| task_of_spec(f) }
+end
+
+namespace :spec do
+  stories.each do |story|
+    namespace story.to_sym do
+      desc "run story #{story}"
+      task all: all_tasks_in_story(story)
+
+      spec_files_in_story(story).each do |spec_file|
+        target = target_of_spec(spec_file)
+        index = index_of_spec(spec_file)
+        desc format("rspec story: %s #%s on %s", story, index, target)
+        RSpec::Core::RakeTask.new(task_of_spec(spec_file)) do |t|
+          puts "Running story `#{story}` on `#{target} index #{index}`"
+          ENV["TARGET_HOST"] = target
+          t.pattern = spec_file
+        end
+      end
+    end
+  end
+end

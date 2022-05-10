@@ -1,0 +1,11 @@
+---
+
+- name: Install supervisor_package
+  ansible.builtin.yum:
+    name: "{{ supervisor_package }}"
+    state: present
+
+- name: Enable supervisor_service
+  ansible.builtin.service:
+    name: "{{ supervisor_service }}"
+    enabled: yes

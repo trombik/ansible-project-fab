@@ -1,0 +1,11 @@
+---
+- hosts: localhost
+  roles:
+    - ansible-role-language_ruby
+  vars:
+    ruby_version:
+      FreeBSD: lang/ruby27
+      OpenBSD: ruby%2.7
+      Debian: ruby
+      RedHat: ruby
+    language_ruby_package: "{{ ruby_version[ansible_os_family] }}"

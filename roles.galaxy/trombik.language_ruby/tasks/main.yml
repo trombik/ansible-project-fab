@@ -1,0 +1,58 @@
+---
+# tasks file for ansible-role-language-ruby
+
+- name: "Include OS-specific variables"
+  include_vars: "{{ lookup('first_found', params) }}"
+  vars:
+    params:
+      files:
+        # XXX ansible version on OpenBSD 6.9 does not have
+        # ansible_distribution_major_version. defaults to
+        # ansible_distribution_version.
+        - "{{ ansible_distribution }}-{{ ansible_distribution_major_version | default(ansible_distribution_version) }}.yml"
+        - "{{ ansible_distribution }}.yml"
+        - "{{ ansible_os_family }}.yml"
+      paths:
+        - vars
+
+- include: "install-{{ ansible_os_family }}.yml"
+
+- name: "Include OS-specific install tasks"
+  include_tasks: "{{ lookup('first_found', params) }}"
+  vars:
+    params:
+      files:
+        - "install-{{ ansible_distribution }}-{{ ansible_distribution_major_version | default(ansible_distribution_version) }}.yml"
+        - "install-{{ ansible_distribution }}.yml"
+        - "install-{{ ansible_os_family }}.yml"
+      paths:
+        - tasks
+
+- name: Find ruby_version
+  command: |
+    ruby -e 'puts RUBY_VERSION'
+  changed_when: false
+  register: __language_ruby_version
+
+- name: Set language_ruby_version
+  set_fact:
+    language_ruby_version:
+      _full: "{{ __language_ruby_version.stdout | trim }}"
+
+- name: Set ruby version facts
+  set_fact:
+    language_ruby_version:
+      short: "{{ language_ruby_version._full | regex_replace('\\.\\d+$', '') | regex_replace('\\.', '') }}"
+      major: "{{ language_ruby_version._full.split('.') | first }}"
+      minor: "{{ language_ruby_version._full.split('.')[1] }}"
+      patch_level: "{{ language_ruby_version._full.split('.')[2] }}"
+      full: "{{ language_ruby_version._full }}"
+
+- name: Assert version strings are in expected format
+  assert:
+    that:
+      - language_ruby_version.full | regex_search('^\\d+\.\\d+\\.\\d+$')
+      - language_ruby_version.short | regex_search('^\\d{2}$')
+      - language_ruby_version.major | regex_search('^\\d+$')
+      - language_ruby_version.minor | regex_search('^\\d+$')
+      - language_ruby_version.patch_level | regex_search('^\\d+$')

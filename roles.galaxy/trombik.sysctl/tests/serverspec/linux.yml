@@ -1,0 +1,8 @@
+---
+- hosts: localhost
+  roles:
+    - ansible-role-sysctl
+  vars:
+    sysctl:
+      net.ipv4.tcp_tw_reuse: 1  # default is 0
+      net.ipv4.tcp_syncookies: 0  # default is 1

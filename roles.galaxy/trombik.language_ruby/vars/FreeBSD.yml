@@ -1,0 +1,5 @@
+---
+__language_ruby_package: lang/ruby27
+__language_ruby_bundler_package: sysutils/rubygem-bundler
+__language_ruby_gem_package: devel/ruby-gems
+  sysutils/rubygem-bundler

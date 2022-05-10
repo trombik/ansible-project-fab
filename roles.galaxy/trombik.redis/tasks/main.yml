@@ -1,0 +1,25 @@
+---
+
+- name: Include ansible_os_family.yml
+  include_vars: "{{ ansible_os_family }}.yml"
+
+- name: Include install-ansible_os_family.yml
+  include: "install-{{ ansible_os_family }}.yml"
+
+- name: Include sentinel.yml
+  include: sentinel.yml
+  # must be included before redis starts.
+  when: redis_sentinel_enable
+
+- name: Flush the handlers so Sentinel is up and running before the redis servers
+  # XXX do NOT notify "Restart redis" handler before this task. If you do,
+  # initial ansible play would fail because redis is not configured at all.
+  ansible.builtin.meta: flush_handlers
+  when: redis_sentinel_enable
+
+- name: Include configure-ansible_os_family.yml
+  include: "configure-{{ ansible_os_family }}.yml"
+
+- name: Include redis.yml
+  include: redis.yml
+  when: redis_enable

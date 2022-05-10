@@ -1,0 +1,4 @@
+---
+language_ruby_package: "{{ __language_ruby_package }}"
+language_ruby_bundler_package: "{{ __language_ruby_bundler_package }}"
+language_ruby_gem_package: "{{ __language_ruby_gem_package }}"

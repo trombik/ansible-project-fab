@@ -1,0 +1,8 @@
+---
+
+- name: Restart supervisor
+  service:
+    name: "{{ supervisor_service }}"
+    # XXX restart without sleep fails (at least) on Devuan
+    sleep: "{{ supervisor_restart_handler_sleep }}"
+    state: restarted

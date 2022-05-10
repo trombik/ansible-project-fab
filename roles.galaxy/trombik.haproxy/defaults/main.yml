@@ -1,0 +1,14 @@
+---
+haproxy_user: "{{ __haproxy_user }}"
+haproxy_group: "{{ __haproxy_group }}"
+haproxy_service: "{{ __haproxy_service }}"
+haproxy_package: "{{ __haproxy_package }}"
+haproxy_extra_packages: []
+haproxy_conf_dir: "{{ __haproxy_conf_dir }}"
+haproxy_conf_file: "{{ __haproxy_conf_dir }}/haproxy.cfg"
+haproxy_config: ""
+haproxy_flags: ""
+haproxy_chroot_dir: "{{ __haproxy_chroot_dir }}"
+haproxy_selinux_seport: {}
+haproxy_x509_certificate_enable: no
+haproxy_x509_certificate_vars: {}

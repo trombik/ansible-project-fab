@@ -1,0 +1,30 @@
+---
+fab_manager_user: fab
+fab_manager_group: fab
+fab_manager_groups: []
+fab_manager_home: /usr/local/fab
+fab_manager_repo_name: fab_manager
+fab_manager_repo_dir: "{{ fab_manager_home }}/{{ fab_manager_repo_name }}"
+# XXX my branch, `local`, has some fixes I found while installing fab_manager
+# on non-supported distributions.
+fab_manager_repo_url: https://github.com/trombik/fab-manager.git
+fab_manager_repo_version: local
+fab_manager_config_dir: "{{ fab_manager_repo_dir }}/config"
+fab_manager_log_dir: "{{ fab_manager_repo_dir }}/log"
+fab_manager_env: {}
+fab_manager_config_database: ""
+fab_manager_packages: "{{ __fab_manager_packages }}"
+fab_manager_db_host: 127.0.0.1
+fab_manager_db_port: 5432
+fab_manager_db_name: fab
+fab_manager_db_user: fab
+fab_manager_db_password: ""
+fab_manager_db_extensions:
+  - unaccent
+  - pg_trgm
+fab_manager_redis_host: 127.0.0.1
+fab_manager_es_host: 127.0.0.1
+fab_manager_http_address: 127.0.0.1
+fab_manager_http_port: 5000
+fab_manager_http_schema: http
+fab_manager_extra_packages: []

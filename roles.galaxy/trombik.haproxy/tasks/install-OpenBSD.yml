@@ -1,0 +1,17 @@
+---
+
+- name: Install haproxy
+  community.general.openbsd_pkg:
+    name: "{{ haproxy_package }}"
+    state: present
+
+- name: Install haproxy_extra_packages
+  community.general.openbsd_pkg:
+    name: "{{ haproxy_extra_packages }}"
+    state: present
+
+- name: Enable haproxy_service
+  ansible.builtin.service:
+    name: "{{ haproxy_service }}"
+    enabled: yes
+    arguments: "{{ haproxy_flags }}"

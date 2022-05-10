@@ -1,0 +1,15 @@
+---
+
+collections:
+  - name: community.general
+  - name: community.postgresql
+  - name: ansible.posix
+
+roles:
+  - name: trombik.git
+  - name: trombik.postgresql
+  - name: trombik.sysctl
+  - name: trombik.redis
+  - name: trombik.supervisor
+  - name: trombik.haproxy
+  - name: trombik.language_ruby

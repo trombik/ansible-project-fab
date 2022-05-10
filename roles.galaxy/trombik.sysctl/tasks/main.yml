@@ -1,0 +1,13 @@
+---
+# tasks file for ansible-role-sysctl
+
+- name: Include OS-specific variables
+  include_vars: "{{ ansible_os_family }}.yml"
+
+- name: Apply sysctl
+  ansible.builtin.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    sysctl_set: yes
+    reload: yes
+  with_dict: "{{ sysctl }}"
