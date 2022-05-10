@@ -1,0 +1,4 @@
+---
+
+- name: Import fab.yml
+  import_playbook: fab.yml
