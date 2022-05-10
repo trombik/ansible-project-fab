@@ -2,6 +2,7 @@
 
 require "rake"
 require "pathname"
+require "shellwords"
 
 def ansible_environment
   ENV.fetch("PROJECT_ENVIRONMENT", "virtualbox")
@@ -42,5 +43,12 @@ task "destroy" do
     Dir.chdir "terraform/plans/staging" do
       sh "terraform apply --destroy"
     end
+  end
+end
+
+namespace "show" do
+  desc "inventory"
+  task "inventory" do
+    sh "ansible-inventory -i inventories/#{ansible_environment.shellescape} --list"
   end
 end
