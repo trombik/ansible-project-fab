@@ -53,3 +53,11 @@ bundle exec rake provision
 ```console
 bundle exec rake show:inventory
 ```
+
+## The application
+
+In `virtualbox` environment, the URL is
+[http://192.168.56.100/](http://192.168.56.100/).
+
+For the admin account, see
+[virtualbox-credentials.yml](playbooks/group_vars/virtualbox-credentials.yml).
