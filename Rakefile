@@ -4,7 +4,7 @@ require "rake"
 require "pathname"
 
 def ansible_environment
-  ENV["PROJECT_ENVIRONMENT"] || "virtualbox"
+  ENV.fetch("PROJECT_ENVIRONMENT", "virtualbox")
 end
 
 desc "up"

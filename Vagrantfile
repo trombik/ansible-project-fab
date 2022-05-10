@@ -19,14 +19,14 @@ def local_ip
       s.connect "8.8.8.8", 1 # any global IP address works here
       s.addr.last
     end
-                ensure
-                  Socket.do_not_reverse_lookup = orig
+  ensure
+    Socket.do_not_reverse_lookup = orig
   end
 end
 
 # @return [Integer] default listening port
 def local_port
-  ENV["VAGRANT_HTTP_PROXY_PORT"] || 8080
+  ENV.fetch("VAGRANT_HTTP_PROXY_PORT", 8080)
 end
 
 # @return [String] the proxy URL
@@ -39,9 +39,8 @@ def proxy_running?
   socket = TCPSocket.new(local_ip, local_port)
   true
 rescue SocketError, Errno::ECONNREFUSED,
-       Errno::EHOSTUNREACH, Errno::ENETUNREACH, IOError
-  false
-rescue Errno::EPERM, Errno::ETIMEDOUT
+       Errno::EHOSTUNREACH, Errno::ENETUNREACH, IOError,
+       Errno::EPERM, Errno::ETIMEDOUT
   false
 ensure
   socket&.close
@@ -51,17 +50,17 @@ end
 
 http_proxy = proxy_running? ? http_proxy_url : ""
 
-environment = ENV["PROJECT_ENVIRONMENT"] || "virtualbox"
+environment = ENV.fetch("PROJECT_ENVIRONMENT", "virtualbox")
 
 # XXX these are Pathname objects. The object behaves like String, but they are
 # not identical. When passing the variables to other objects, or classes as a
 # String, make sure to convert them to String with `to_s`.
 project_root_directory = Pathname.new(__FILE__).dirname
-inventory_root_directory = project_root_directory + "inventories"
+inventory_root_directory = project_root_directory / "inventories"
 inventory_directory = inventory_root_directory + environment
-inventory_file = inventory_directory + "inventory.yml"
+inventory_file = inventory_directory / "inventory.yml"
 inventory = YAML.load_file(inventory_file)
-playbooks_directory = project_root_directory + "playbooks"
+playbooks_directory = project_root_directory / "playbooks"
 
 # group_name = project["name"]
 
@@ -110,7 +109,7 @@ Vagrant.configure("2") do |config|
             https_proxy: http_proxy,
             no_proxy: format("localhost,127.0.0.1,trombik.org")
           }
-          ansible.playbook = (playbooks_directory + "site.yml").to_s
+          ansible.playbook = (playbooks_directory / "site.yml").to_s
           ansible.verbose = "v"
           ansible.inventory_path = inventory_directory.to_s
           ansible.config_file = "ansible.cfg"
