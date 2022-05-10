@@ -38,7 +38,7 @@ exec rake -T` for all the targets.
 
 ### Launching VMs
 
-```
+```console
 bundle exec rake up
 ```
 
