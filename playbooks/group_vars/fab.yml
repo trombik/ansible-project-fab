@@ -3,6 +3,7 @@ project_db_host: 127.0.0.1
 project_db_name: fab
 project_redis_host: 127.0.0.1
 project_es_host: 127.0.0.1  # XXX unused
+project_rails_env: production
 
 fab_manager_groups:
   - ansible
@@ -38,7 +39,7 @@ fab_manager_env:
   NODE_OPTIONS: --max-old-space-size=2048
   # XXX disable color in active record
   NO_COLOR: yes
-  RAILS_ENV: production
+  RAILS_ENV: "{{ project_rails_env }}"
   # see:
   # https://github.com/sleede/fab-manager/blob/master/doc/environment.md
   POSTGRES_HOST: "{{ fab_manager_db_host }}"
@@ -267,7 +268,7 @@ supervisor_config: |
 
   [program:app]
   user={{ fab_manager_user }}
-  environment=PATH="/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin",HOME={{ fab_manager_home }}
+  environment=PATH="/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin",HOME={{ fab_manager_home }},RAILS_ENV={{ project_rails_env }}
   directory={{ fab_manager_repo_dir }}
   command=bundle exec rails s puma -p {{ fab_manager_http_port }} -b {{ fab_manager_http_address }}
   stderr_logfile={{ supervisor_log_dir }}/app.err.log
@@ -275,7 +276,7 @@ supervisor_config: |
 
   [program:worker]
   user={{ fab_manager_user }}
-  environment=PATH="/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin",HOME={{ fab_manager_home }}
+  environment=PATH="/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin",HOME={{ fab_manager_home }},RAILS_ENV={{ project_rails_env }}
   directory={{ fab_manager_repo_dir }}
   command=bundle exec sidekiq -C {{ fab_manager_repo_dir }}/config/sidekiq.yml
   stderr_logfile={{ supervisor_log_dir }}/worker.err.log
