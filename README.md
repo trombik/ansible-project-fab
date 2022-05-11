@@ -31,6 +31,8 @@ Set `PROJECT_ENVIRONMENT` (optional, defaults to `virtualbox`).
 export PROJECT_ENVIRONMENT=virtualbox
 ```
 
+See available `PROJECT_ENVIRONMENT` in [inventories](inventories).
+
 ## Usage
 
 [Rakefile](Rakefile) implements wrappers for all the environment. See `bundle
@@ -60,6 +62,12 @@ See [spec/serverspec](spec/serverspec) for tests.
 
 ```console
 bundle exec rake spec:serverspec
+```
+
+### Destroying VMs
+
+```console
+bundle exec rake destroy
 ```
 
 ## The application
