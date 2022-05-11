@@ -24,7 +24,6 @@ jobs:
     needs:
       - pre_build
     if: ${{ needs.pre_build.outputs.should_skip != 'true' }}
-    runs-on: macos-10.15
     outputs:
       instances: ${{ steps.set-instances.outputs.instances }}
     steps:
