@@ -54,6 +54,14 @@ bundle exec rake provision
 bundle exec rake show:inventory
 ```
 
+### Testing
+
+See [spec/serverspec](spec/serverspec) for tests.
+
+```console
+bundle exec rake spec:serverspec
+```
+
 ## The application
 
 In `virtualbox` environment, the URL is
