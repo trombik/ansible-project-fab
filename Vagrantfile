@@ -99,6 +99,11 @@ Vagrant.configure("2") do |config|
             end
           end
         end
+
+        # XXX on FreeBSD, initial ssh to VMs fail with "connection reset by
+        # peer". workaround the issue by creating arp entry from the VM.
+        c.vm.provision "shell", inline: "ping -c 1 192.168.56.1"
+
         c.vm.provision :ansible do |ansible|
           ansible.compatibility_mode = "2.0"
           ansible_extra_vars_staging = {
