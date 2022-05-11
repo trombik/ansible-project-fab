@@ -1,0 +1,112 @@
+---
+name: spec
+on:
+  - pull_request
+  - push
+jobs:
+  pre_build:
+
+    # A job to see if the entrire jobs should be skipped.
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@v3.4.1
+        with:
+          concurrent_skipping: same_content
+          skip_after_successful_duplicate: 'true'
+          paths_ignore: '["**/*.md", "**/docs/**"]'
+          do_not_skip: '["pull_request", "workflow_dispatch", "schedule"]'
+
+  list:
+    runs-on: ubuntu-latest
+    needs:
+      - pre_build
+    if: ${{ needs.pre_build.outputs.should_skip != 'true' }}
+    runs-on: macos-10.15
+    outputs:
+      instances: ${{ steps.set-instances.outputs.instances }}
+    steps:
+      - name: Set cache-epoch
+        id: set-instances
+        run: |
+          CACHE_EPOCH=1
+          echo ::set-output name=cache-epoch::${CACHE_EPOCH}
+
+  spec:
+    runs-on: macos-10.15
+    needs:
+      - pre_build
+      - list
+    if: ${{ needs.pre_build.outputs.should_skip != 'true' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.7
+          bundler-cache: true
+
+      - name: Cache vagrant boxes
+        uses: actions/cache@v2
+        id: vagrant-box-cache
+        env:
+          cache-name: vagrant-boxes
+        with:
+          path: ~/.vagrant.d/boxes/
+          # XXX using Vagrantfile as cache key is not very efficient because
+          # the file has other configuration options
+          key: vagrant-boxes-${{ hashFiles('**/.Vagrantfile') }}-${{ needs.list.outputs.cache-epoch }}
+          restore-keys: |
+            vagrant-boxes-${{ hashFiles('**/Vagrantfile') }}-${{ needs.list.outputs.cache-epoch }}
+
+      - name: Show vagrant version
+        run: |
+          Vagrant --version
+
+      - name: Show VirtualBox version
+        run: |
+          virtualbox -h
+
+      - name: Download and add box file from trombik/ansible-vm-build
+        if: steps.vagrant-box-cache.outputs.cache-hit != 'true'
+
+        # XXX download box files from the latest release page because vagrant
+        # cloud has a rather strict rate limit.
+        #
+        # see
+        # https://github.com/trombik/ansible-vm-build
+        run: |
+          VAGRANT_CLOUD_USER="trombik"
+          LATEST_BOX_URL_BASE="https://github.com/trombik/ansible-vm-build/releases/latest/download"
+          BOX_NAME="ansible-freebsd-13.0-amd64"
+
+          # download box file from the repository if the box file is
+          # available. if not, box is downloaded from vagrant cloud as a
+          # fallback.
+          if curl --head --location --fail "${LATEST_BOX_URL_BASE}/${BOX_NAME}.box"; then
+            Vagrant box add --name ${VAGRANT_CLOUD_USER}/${BOX_NAME} "${LATEST_BOX_URL_BASE}/${BOX_NAME}.box"
+          fi
+
+      - name: Run spec
+        run: |
+          bundle exec rake spec:serverspec
+  all_build:
+    # a meta job that requires all of the above so that repository
+    # admin can choose a single test name in "Require status checks to pass
+    # before merging". A trick obtained from:
+    #
+    # https://github.com/jazzband/pip-tools/issues/1085#issuecomment-619172509
+    name: All build
+    runs-on: ubuntu-latest
+    needs:
+      - pre_build
+      - list
+      - spec
+    steps:
+      - name:
+        run: |
+          echo "All builds finished"
