@@ -105,6 +105,10 @@ jobs:
         run: |
           tox --workdir .tox
           . ./.tox/default/bin/activate
+
+          export ANSIBLE_VAULT_PASSWORD_FILE=vault_password
+          echo aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa > $ANSIBLE_VAULT_PASSWORD_FILE
+
           bundle exec rake spec:serverspec
   all_build:
     # a meta job that requires all of the above so that repository
