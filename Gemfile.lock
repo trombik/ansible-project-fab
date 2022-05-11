@@ -1,3 +1,35 @@
+GIT
+  remote: https://github.com/trombik/ansible-vault
+  revision: d5844508de670b401bce18e013c6d79475e4deb7
+  branch: master
+  specs:
+    ansible-vault (0.2.0)
+
+GIT
+  remote: https://github.com/trombik/ansibleinventory.git
+  revision: 6ca46fadc35fe837b8cd701d9882e11567556a89
+  branch: master
+  specs:
+    ansibleinventory (0.1.0)
+
+GIT
+  remote: https://github.com/trombik/vagrant-serverspec.git
+  revision: d6dbd98dea1cf938dc29602f580bc43d205dd25a
+  branch: master
+  specs:
+    vagrant-serverspec (0.1.0)
+      net-ssh (>= 3.0.2)
+      serverspec (>= 2.40.0)
+      vagrant-ssh-config
+
+GIT
+  remote: https://github.com/trombik/vagrant-ssh-config.git
+  revision: 9c2c42617989d030170d04e67f39b944e3b02a07
+  branch: master
+  specs:
+    vagrant-ssh-config (1.0.1)
+      net-ssh (>= 3.0.2)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -77,6 +109,8 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
+  ansible-vault!
+  ansibleinventory!
   dnsruby
   highline
   irb
@@ -86,6 +120,8 @@ DEPENDENCIES
   rspec-retry (~> 0.5.5)
   rubocop
   serverspec
+  vagrant-serverspec!
+  vagrant-ssh-config!
 
 BUNDLED WITH
    2.3.10
