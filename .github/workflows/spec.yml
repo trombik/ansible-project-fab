@@ -109,7 +109,9 @@ jobs:
           export ANSIBLE_VAULT_PASSWORD_FILE=vault_password
           echo aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa > $ANSIBLE_VAULT_PASSWORD_FILE
 
-          bundle exec rake spec:serverspec
+          bundle exec rake up
+          bundle exec rake provision
+          bundle exec spec:serverspec
   all_build:
     # a meta job that requires all of the above so that repository
     # admin can choose a single test name in "Require status checks to pass
