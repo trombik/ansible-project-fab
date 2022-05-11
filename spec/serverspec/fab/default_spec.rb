@@ -17,7 +17,7 @@ ports = [
   80,
   5000,
   5432,
-  6379,
+  6379
 ]
 
 describe command "echo" do
@@ -31,7 +31,6 @@ describe command "supervisorctl status" do
     its(:stdout) { should match(/^#{worker}\s+RUNNING\s+/) }
   end
 end
-
 
 services.each do |s|
   describe service(s) do
