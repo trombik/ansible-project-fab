@@ -2,6 +2,15 @@
 
 A project to maintain `fab.mkrsgh.org`.
 
+The project deploys [fab-manager](https://github.com/sleede/fab-manager) on
+AWS EC2.
+
+`terraform` is used to manage AWS resources.
+
+`ansible` is used to manage the `fab-manager` instance.
+
+Tests are provided to ensure the system is working.
+
 ## Requirements
 
 * `ruby` 2.x
@@ -25,13 +34,27 @@ Activate `tox` environment.
 source ./.tox/default/bin/activate
 ```
 
-Set `PROJECT_ENVIRONMENT` (optional, defaults to `virtualbox`).
-
 ```console
 export PROJECT_ENVIRONMENT=virtualbox
 ```
 
+Set `PROJECT_ENVIRONMENT` (optional, defaults to `virtualbox`).
+
+## `PROJECT_ENVIRONMENT`
+
 See available `PROJECT_ENVIRONMENT` in [inventories](inventories).
+
+### `virtualbox`
+
+The default environment when `PROJECT_ENVIRONMENT` is not defined.
+
+This environment creates VMs in `virtualbox`. See [Vagrantfile](Vagrantfile)
+for details.
+
+### `staging`
+
+A non-production environment on AWS EC2. See
+[terraform/plans/staging](terraform/plans/staging) for details.
 
 ## Usage
 
@@ -76,4 +99,4 @@ In `virtualbox` environment, the URL is
 [http://192.168.56.100/](http://192.168.56.100/).
 
 For the admin account, see
-[virtualbox-credentials.yml](playbooks/group_vars/virtualbox-credentials.yml).
+[virtualbox_credentials.yml](playbooks/group_vars/virtualbox_credentials.yml).
