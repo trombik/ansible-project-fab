@@ -29,7 +29,7 @@ end
 #
 # @return [String] PROJECT_ENVIRONMENT if defined in ENV. defaults to "staging"
 def test_environment
-  ENV["PROJECT_ENVIRONMENT"]
+  ENV.fetch("PROJECT_ENVIRONMENT", nil)
 end
 
 # Returns inventory object

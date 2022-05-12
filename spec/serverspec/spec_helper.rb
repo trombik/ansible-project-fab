@@ -37,12 +37,12 @@ when "staging", "prod"
   #   'ssh jumpguy@jump.server.enterprise.com nc %h %p'
   # )
   default_options = Net::SSH::Config.translate(
-    Net::SSH::Config.load("#{ENV['HOME']}/.ssh/config", inventory.host(host)["ansible_host"])
+    Net::SSH::Config.load("#{Dir.home}/.ssh/config", inventory.host(host)["ansible_host"])
   )
   options = {
     host_name: inventory.host(host)["ansible_host"],
     keys_only: true,
-    verify_host_key: test_environment == "prod" ? :always : :never,
+    verify_host_key: test_environment == "prod" ? :always : :never
   }
 end
 options[:proxy] = proxy if proxy
