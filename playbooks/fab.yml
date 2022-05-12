@@ -9,7 +9,8 @@
     https_proxy: "{{ https_proxy | default() }}"
     no_proxy: "{{ no_proxy | default() }}"
   pre_tasks:
-    - debug: var=hostvars[inventory_hostname]
+    - ansible.builtin.debug:
+        var: hostvars[inventory_hostname]
   roles:
     - role: trombik.git
     - role: trombik.git
