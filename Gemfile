@@ -9,6 +9,9 @@ gem "rake"
 gem "vagrant-serverspec", git: "https://github.com/trombik/vagrant-serverspec.git", branch: "master"
 gem "vagrant-ssh-config", git: "https://github.com/trombik/vagrant-ssh-config.git", branch: "master"
 
+gem "bcrypt_pbkdf"
+gem "ed25519"
+
 group :development, :test do
   # gem "capybara"
   gem "retries", "~> 0.0.5"
