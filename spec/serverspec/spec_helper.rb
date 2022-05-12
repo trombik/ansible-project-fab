@@ -36,13 +36,13 @@ when "staging", "prod"
   # proxy = Net::SSH::Proxy::Command.new(
   #   'ssh jumpguy@jump.server.enterprise.com nc %h %p'
   # )
+  default_options = Net::SSH::Config.translate(
+    Net::SSH::Config.load("#{ENV['HOME']}/.ssh/config", inventory.host(host)["ansible_host"])
+  )
   options = {
     host_name: inventory.host(host)["ansible_host"],
-    port: 22,
-    user: ENV.fetch("PROJECT_USER", "ec2-user"),
     keys_only: true,
-    keys: ["/usr/home/trombik/.ssh/id_rsa-trombik"],
-    verify_host_key: :never
+    verify_host_key: test_environment == "prod" ? :always : :never,
   }
 end
 options[:proxy] = proxy if proxy
@@ -51,6 +51,6 @@ set :backend, :ssh
 set :sudo_password, ENV.fetch("SUDO_PASSWORD", nil)
 
 set :host, host
-set :ssh_options, options
+set :ssh_options, default_options.merge(options)
 set :request_pty, true
 set :env, LANG: "C", LC_MESSAGES: "C"
