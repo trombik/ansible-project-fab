@@ -13,6 +13,7 @@ Dir["#{File.dirname(__FILE__)}/shared_examples/*.rb"].sort.each { |f| require f 
 host = ENV.fetch("TARGET_HOST", nil)
 
 proxy = nil
+default_options = {}
 options = {}
 
 case test_environment
