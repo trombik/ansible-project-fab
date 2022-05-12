@@ -67,7 +67,7 @@ task "provision" do
       sh "vagrant provision"
     end
   when "staging"
-    sh "ansible-playbook -vv -i #{inventory_path.shellescape} " \
+    sh "ansible-playbook -i #{inventory_path.shellescape} " \
        "--ssh-common-args='-o \"UserKnownHostsFile /dev/null\" -o \"StrictHostKeyChecking no\"' "\
        "playbooks/site.yml"
   end
