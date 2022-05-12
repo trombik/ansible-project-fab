@@ -56,6 +56,18 @@ for details.
 A non-production environment on AWS EC2. See
 [terraform/plans/staging](terraform/plans/staging) for details.
 
+Make sure your `~/.ssh/config` has necessary configuration options for EC2
+instances.
+
+```ssh-config
+Host *.amazonaws.com
+    User ec2-user
+    IdentityFile ~/.ssh/mykey-ed.pem
+    ControlMaster auto
+    ControlPersist 30m
+    ControlPath ~/.ssh/control-%C
+```
+
 ## Usage
 
 [Rakefile](Rakefile) implements wrappers for all the environment. See `bundle
