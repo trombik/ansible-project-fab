@@ -8,10 +8,20 @@ filters:
     - staging
     - prod
 
+hostnames:
+  - tag:Name
+
 keyed_groups:
-  - key: tags.Name
-    prefix: tag_Name_
-    separator: ""
+  # create groups from tag:Groups, comma-separated list of groups
+  - key: 'tags | json_query("Groups") | split(",")'
+    prefix: ''
+    separator: ''
+
+groups:
+
+compose:
+  ansible_host: public_dns_name
+
 cache: no
 cache_plugin: ansible.builtin.jsonfile
 cache_timeout: 300

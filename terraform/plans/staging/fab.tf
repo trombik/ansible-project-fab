@@ -16,6 +16,11 @@ variable "fqdn" {
   default = "fab.mkrsgh.org"
 }
 
+variable "groups" {
+  type = string
+  default = "fab,staging_credentials,staging"
+}
+
 variable "ports_tcp_public" {
   type = list(number)
   default = [22, 80, 443]
@@ -78,7 +83,7 @@ resource "aws_instance" "fab" {
   ami                           = "ami-019a1b29c4475470d"
   vpc_security_group_ids        = ["${aws_security_group.fab.id}"]
   subnet_id                     = "subnet-293b9c5f"
-  tags                          = { "Name" = var.fqdn, "Environment" = var.environment, "Project" = var.project  }
+  tags                          = { "Name" = var.fqdn, "Environment" = var.environment, "Project" = var.project, "Groups" = var.groups }
   user_data                     = file("${path.module}/freebsd.sh")
   root_block_device {
     delete_on_termination = false
