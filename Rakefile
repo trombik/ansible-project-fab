@@ -7,9 +7,12 @@ require "json"
 require "ansibleinventory"
 require "vagrant/serverspec"
 require "vagrant/ssh/config"
+require "retries"
+
+ENV["PROJECT_ENVIRONMENT"] = ENV.fetch("PROJECT_ENVIRONMENT", "virtualbox")
 
 def ansible_environment
-  ENV.fetch("PROJECT_ENVIRONMENT", "virtualbox")
+  ENV.fetch("PROJECT_ENVIRONMENT", nil)
 end
 
 def inventory_path
@@ -43,6 +46,16 @@ task "up" do
     Dir.chdir "terraform/plans/staging" do
       sh "terraform apply"
     end
+
+    # make sure all hosts are ready for ansible play
+    retry_opts = {
+      max_tries: 10, base_sleep_seconds: 10, max_sleep_seconds: 30
+    }
+    with_retries(retry_opts) do |_attempt_number|
+      sh "ansible -i #{inventory_path.shellescape} " \
+         "--ssh-common-args='-o \"UserKnownHostsFile /dev/null\" -o \"StrictHostKeyChecking no\"' " \
+         "-m ping all"
+    end
   end
 end
 
@@ -53,6 +66,10 @@ task "provision" do
     Bundler.with_original_env do
       sh "vagrant provision"
     end
+  when "staging"
+    sh "ansible-playbook -vv -i #{inventory_path.shellescape} " \
+       "--ssh-common-args='-o \"UserKnownHostsFile /dev/null\" -o \"StrictHostKeyChecking no\"' "\
+       "playbooks/site.yml"
   end
 end
 
@@ -92,7 +109,12 @@ namespace "spec" do
         # type password
         configure_sudo_password_for(run_as_user)
         puts "running serverspec for #{g} on #{h} as user `#{run_as_user}`"
-        Vagrant::Serverspec.new(inventory_path).run(group: g, hostname: h)
+        case ansible_environment
+        when "virtualbox"
+          Vagrant::Serverspec.new(inventory_path).run(group: g, hostname: h)
+        when "staging"
+          sh "env PROJECT_ENVIRONMENT=staging TARGET_HOST=#{h.shellescape} rspec"
+        end
       end
     end
   end
