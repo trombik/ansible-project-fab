@@ -8,7 +8,7 @@ all:
     fab:
       hosts:
         fab.mkrsgh.org:
-    virtualbox-credentials:
+    virtualbox_credentials:
       children:
         fab:
     virtualbox:
