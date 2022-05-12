@@ -97,7 +97,15 @@ end
 namespace "spec" do
   desc "run serverspec on all hosts"
   task "serverspec" do
+    # XXX set ANSIBLE_VERBOSE_TO_STDERR becasue AnsibleInventory parses output
+    # of `ansible-inventory`, and if verbose is greater than 1, the output is
+    # not valid YAML.
+    #
+    # XXX fix this issue in AnsibleInventory
+    verbose_to_stderr_enabled = ENV.key?("ANSIBLE_VERBOSE_TO_STDERR")
+    ENV["ANSIBLE_VERBOSE_TO_STDERR"] = "true"
     inventory = AnsibleInventory.new(inventory_path)
+
     inventory.all_groups.each do |g|
       next unless Dir.exist?("spec/serverspec/#{g}")
 
@@ -117,5 +125,6 @@ namespace "spec" do
         end
       end
     end
+    ENV.delete("ANSIBLE_VERBOSE_TO_STDERR") unless verbose_to_stderr_enabled
   end
 end
