@@ -6,7 +6,6 @@ filters:
     - fab
   tag:Environment:
     - staging
-    - prod
 
 hostnames:
   - tag:Name
