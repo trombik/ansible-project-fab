@@ -20,5 +20,8 @@
     - role: trombik.language_ruby
     - role: trombik.fab_manager
     - role: trombik.supervisor
+    - role: copy_certs
+      when:
+        - fab_manager_http_schema == 'https'
     - role: trombik.haproxy
   vars:
