@@ -27,8 +27,12 @@ end
 
 def run_as_user
   return ENV.fetch("ANSIBLE_USER", nil) if ENV["ANSIBLE_USER"]
-
-  "vagrant"
+  case ansible_environment
+  when "virtualbox"
+    "vagrant"
+  when "staging"
+    "ec2-user"
+  end
 end
 
 def sudo_password_required?(user)
