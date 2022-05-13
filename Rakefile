@@ -31,7 +31,7 @@ def run_as_user
   case ansible_environment
   when "virtualbox"
     "vagrant"
-  when "staging"
+  when "staging", "prod"
     "ec2-user"
   end
 end
@@ -47,8 +47,8 @@ task "up" do
     Bundler.with_original_env do
       sh "vagrant up --no-provision"
     end
-  when "staging"
-    Dir.chdir "terraform/plans/staging" do
+  when "staging", "prod"
+    Dir.chdir "terraform/plans/#{ansible_environment}" do
       sh "terraform apply"
     end
 
@@ -71,7 +71,7 @@ task "provision" do
     Bundler.with_original_env do
       sh "vagrant provision"
     end
-  when "staging"
+  when "staging", "prod"
     sh "ansible-playbook -i #{inventory_path.shellescape} " \
        "--ssh-common-args='-o \"UserKnownHostsFile /dev/null\" -o \"StrictHostKeyChecking no\"' " \
        "playbooks/site.yml"
@@ -85,8 +85,8 @@ task "destroy" do
     Bundler.with_original_env do
       sh "vagrant destroy -f"
     end
-  when "staging"
-    Dir.chdir "terraform/plans/staging" do
+  when "staging", "prod"
+    Dir.chdir "terraform/plans/#{ansible_environment}" do
       sh "terraform apply --destroy"
     end
   end
@@ -125,9 +125,9 @@ namespace "spec" do
         case ansible_environment
         when "virtualbox"
           Vagrant::Serverspec.new(inventory_path).run(group: g, hostname: h)
-        when "staging"
+        when "staging", "prod"
           dir = Pathname.new("spec") / "serverspec" / g
-          sh "env PROJECT_ENVIRONMENT=staging TARGET_HOST=#{h.shellescape} rspec #{dir.to_s.shellescape}"
+          sh "env PROJECT_ENVIRONMENT=#{ansible_environment.shellescape} TARGET_HOST=#{h.shellescape} rspec #{dir.to_s.shellescape}"
         end
       end
     end
