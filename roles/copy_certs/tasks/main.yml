@@ -11,6 +11,7 @@
 - name: Copy TLS certs
   ansible.builtin.copy:
     src: files/fab.mkrsgh.org.pem
+    dest: /usr/local/etc/ssl/haproxy/
     owner: www
     group: wheel
     mode: "0460"
