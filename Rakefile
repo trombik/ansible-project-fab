@@ -73,7 +73,7 @@ task "provision" do
     end
   when "staging"
     sh "ansible-playbook -i #{inventory_path.shellescape} " \
-       "--ssh-common-args='-o \"UserKnownHostsFile /dev/null\" -o \"StrictHostKeyChecking no\"' "\
+       "--ssh-common-args='-o \"UserKnownHostsFile /dev/null\" -o \"StrictHostKeyChecking no\"' " \
        "playbooks/site.yml"
   end
 end
