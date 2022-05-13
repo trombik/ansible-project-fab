@@ -125,7 +125,8 @@ namespace "spec" do
         when "virtualbox"
           Vagrant::Serverspec.new(inventory_path).run(group: g, hostname: h)
         when "staging"
-          sh "env PROJECT_ENVIRONMENT=staging TARGET_HOST=#{h.shellescape} rspec"
+          dir = Pathname.new("spec") / "serverspec" / g
+          sh "env PROJECT_ENVIRONMENT=staging TARGET_HOST=#{h.shellescape} rspec #{dir}"
         end
       end
     end
