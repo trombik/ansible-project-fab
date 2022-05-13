@@ -27,6 +27,7 @@ end
 
 def run_as_user
   return ENV.fetch("ANSIBLE_USER", nil) if ENV["ANSIBLE_USER"]
+
   case ansible_environment
   when "virtualbox"
     "vagrant"
