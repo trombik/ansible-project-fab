@@ -1,0 +1,28 @@
+plugin: amazon.aws.aws_ec2
+regions:
+  - ap-northeast-1
+filters:
+  tag:Project:
+    - fab
+  tag:Environment:
+    - prod
+
+hostnames:
+  - tag:Name
+
+keyed_groups:
+  # create groups from tag:Groups, comma-separated list of groups
+  - key: 'tags | json_query("Groups") | split(",")'
+    prefix: ''
+    separator: ''
+
+groups:
+
+compose:
+  ansible_host: public_dns_name
+
+cache: no
+cache_plugin: ansible.builtin.jsonfile
+cache_timeout: 300
+cache_connection: /tmp/aws_inventory
+cache_prefix: aws_ec2
