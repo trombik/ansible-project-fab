@@ -127,7 +127,8 @@ namespace "spec" do
           Vagrant::Serverspec.new(inventory_path).run(group: g, hostname: h)
         when "staging", "prod"
           dir = Pathname.new("spec") / "serverspec" / g
-          sh "env PROJECT_ENVIRONMENT=#{ansible_environment.shellescape} TARGET_HOST=#{h.shellescape} rspec #{dir.to_s.shellescape}"
+          sh "env PROJECT_ENVIRONMENT=#{ansible_environment.shellescape} " \
+             "TARGET_HOST=#{h.shellescape} rspec #{dir.to_s.shellescape}"
         end
       end
     end
