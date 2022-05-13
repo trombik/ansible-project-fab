@@ -120,13 +120,13 @@ namespace "spec" do
         # XXX pass SUDO_PASSWORD to serverspec if the user is required to
         # type password
         configure_sudo_password_for(run_as_user)
-        puts "running serverspec for #{g} on #{h} as user `#{run_as_user}`"
+        puts "running serverspec for group `#{g}` on host `#{h}` as user `#{run_as_user}`"
         case ansible_environment
         when "virtualbox"
           Vagrant::Serverspec.new(inventory_path).run(group: g, hostname: h)
         when "staging"
           dir = Pathname.new("spec") / "serverspec" / g
-          sh "env PROJECT_ENVIRONMENT=staging TARGET_HOST=#{h.shellescape} rspec #{dir}"
+          sh "env PROJECT_ENVIRONMENT=staging TARGET_HOST=#{h.shellescape} rspec #{dir.to_s.shellescape}"
         end
       end
     end
