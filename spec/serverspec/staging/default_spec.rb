@@ -19,3 +19,10 @@ describe file "#{cert_dir}/fab.mkrsgh.org.pem" do
   it { should be_grouped_into "wheel" }
   it { should be_mode 460 }
 end
+
+describe command "curl --verbose --cacert /usr/local/etc/ssl/cert.pem --header 'Host: fab.mkrsgh.org' --connect-to 127.0.0.1:443 https://fab.mkrsgh.org" do
+  its(:exit_status) { should eq 0 }
+  its(:stdout) { should match(/SSL certificate verify ok/) }
+  its(:stdout) { should match(/#{Regexp.escape("HTTP/1.1 200 OK")}/) }
+  its(:stdout) { should match(/#{Regexp.escape("<title>Fab-manager</title>")}/) }
+end
