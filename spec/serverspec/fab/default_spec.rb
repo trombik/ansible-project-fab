@@ -15,13 +15,38 @@ services = %w[
 
 ports = [
   80,
+  443,
   5000,
   5432,
   6379
 ]
 
+cert_dir = "/usr/local/etc/ssl/haproxy"
+cert_file = case test_environment
+            when "virtualbox"
+              "localhost.pem"
+            else
+              "fab.mkrsgh.org.pem"
+            end
+cert_file_full_path = "#{cert_dir}/#{cert_file}"
+
 describe command "echo" do
   its(:exit_status) { should eq 0 }
+end
+
+describe command "haproxy -c -f /usr/local/etc/haproxy.cfg" do
+  its(:exit_status) { should eq 0 }
+  # raise error when configuration file has _possible_ errors, which are not
+  # critical, but indicate possible errors
+  #
+  # XXX `haproxy -c` has inconsistency. when invoked from command line, the
+  # output goes to stderr. but without terminal, it goes to stdout. test both
+  # just in case.
+  its(:stdout) do
+    pending "logging from haproxy is not yet implemented"
+    should_not match(/WARNING/)
+  end
+  its(:stderr) { should_not match(/WARNING/) }
 end
 
 describe command "supervisorctl status" do
@@ -43,4 +68,48 @@ ports.each do |p|
   describe port(p) do
     it { should be_listening }
   end
+end
+
+describe file cert_dir do
+  it { should exist }
+  it { should be_directory }
+  it { should be_owned_by "www" }
+  it { should be_grouped_into "wheel" }
+  it { should be_mode 755 }
+end
+
+describe file "#{cert_dir}/#{cert_file}" do
+  it { should exist }
+  it { should be_file }
+  it { should be_owned_by "www" }
+  it { should be_grouped_into "wheel" }
+  it { should be_mode 460 }
+end
+
+# test HTTP redirect to HTTPS
+describe command "curl --verbose --header 'Host: fab.mkrsgh.org' http://127.0.0.1" do
+  its(:exit_status) { should eq 0 }
+  its(:stdout) { should match(/#{Regexp.escape("HTTP/1.1 302")}/) }
+  its(:stdout) { should match(/#{Regexp.escape("location: https://fab.mkrsgh.org/")}/) }
+end
+
+curl_test_option = case test_environment
+                   when "virtualbox"
+                     "--verbose --insecure --header 'Host: fab.mkrsgh.org' https://127.0.0.1"
+                   else
+                     "--verbose --cacert #{cert_file_full_path.shellescape} --header 'Host: fab.mkrsgh.org' --connect-to 127.0.0.1:443 https://fab.mkrsgh.org"
+                   end
+describe command "curl #{curl_test_option}" do
+  its(:exit_status) { should eq 0 }
+  its(:stdout) { should match(/#{Regexp.escape("HTTP/1.1 200 OK")}/) }
+  its(:stdout) { should match(/#{Regexp.escape("<title>Fab-manager</title>")}/) }
+  its(:stdout) { should match(/SSL certificate verify ok/) } if test_environment != "virtualbox"
+end
+
+# test acme backend
+describe command "curl --verbose --header 'Host: fab.mkrsgh.org' http://127.0.0.1/.well-known/acme-challenge/" do
+  its(:exit_status) { should eq 0 }
+  # XXX test HTTP status 503 here because acme backend is only available when
+  # acme client is running.
+  its(:stdout) { should match(/#{Regexp.escape("HTTP/1.1 503")}/) }
 end
