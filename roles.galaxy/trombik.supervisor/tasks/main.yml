@@ -70,6 +70,9 @@
     src: supervisord.conf.j2
     dest: "{{ supervisor_conf_file }}"
     validate: echo %s
+    mode: "{{ supervisor_config_mode }}"
+    owner: "{{ supervisor_config_owner }}"
+    group: "{{ supervisor_config_group }}"
   notify: Restart supervisor
 
 - name: Start supervisor

@@ -121,7 +121,7 @@ describe file config do
   it { should be_file }
   it { should be_owned_by user }
   it { should be_grouped_into group }
-  it { should be_mode 644 }
+  it { should be_mode 600 }
   its(:content) { should match Regexp.escape("Managed by ansible") }
 end
 

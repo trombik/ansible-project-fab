@@ -7,3 +7,4 @@ __supervisor_conf_d_dir_name: supervisord.d
 __supervisor_unix_socket_dir: /run/supervisor
 __supervisor_pid_dir: /run
 __supervisor_log_dir: /var/log/supervisor
+__supervisor_config_group: root
