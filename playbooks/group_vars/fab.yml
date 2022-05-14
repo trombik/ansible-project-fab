@@ -60,13 +60,13 @@ fab_manager_env:
   DEFAULT_PROTOCOL: "{{ fab_manager_http_schema }}"
 
   DELIVERY_METHOD: smtp
-  SMTP_ADDRESS: 127.0.0.1
-  SMTP_PORT: 587
-  SMTP_USER_NAME: user
-  SMTP_PASSWORD: password
-  SMTP_AUTHENTICATION: plain
+  SMTP_ADDRESS: "{{ project_smtp_address }}"
+  SMTP_PORT: "{{ project_smtp_port }}"
+  SMTP_USER_NAME: "{{ project_smtp_user_name }}"
+  SMTP_PASSWORD: "{{ project_smtp_password }}"
+  SMTP_AUTHENTICATION: "{{ project_smtp_authentication }}"
   SMTP_ENABLE_STARTTLS_AUTO: "true"
-  SMTP_OPENSSL_VERIFY_MODE: ""
+  SMTP_OPENSSL_VERIFY_MODE: "peer"
   SMTP_TLS: "false"
 
   RAILS_LOCALE: en

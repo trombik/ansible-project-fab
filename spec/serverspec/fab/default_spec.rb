@@ -2,6 +2,10 @@
 
 require_relative "../spec_helper"
 
+default_config_dir = "/usr/local/etc"
+default_user = "root"
+default_group = "wheel"
+
 workers = %w[
   app
   worker
@@ -128,4 +132,12 @@ describe command "curl --verbose --insecure --header 'Host: fab.mkrsgh.org' http
   its(:stdout) { should match(/#{Regexp.escape("HTTP/1.1 404")}/) }
   its(:stdout) { should match(/X-Backend: nginx-servers/i) }
   its(:stdout) { should match(/If you are the application owner check the logs for more information/) }
+end
+
+describe file "#{default_config_dir}/supervisor/supervisord.conf" do
+  it { should exist }
+  it { should be_file }
+  it { should be_mode 600 }
+  it { should be_grouped_into default_group }
+  it { should be_owned_by default_user }
 end

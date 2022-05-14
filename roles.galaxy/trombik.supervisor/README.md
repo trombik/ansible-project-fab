@@ -23,6 +23,9 @@ See [requirements.yml](requirements.yml).
 | `supervisor_conf_d_dir_name` | `basename` of `conf.d` directory | `{{ __supervisor_conf_d_dir_name }}` |
 | `supervisor_conf_d_dir` | Path to `conf.d` directory | `{{ supervisor_conf_dir }}/{{ supervisor_conf_d_dir_name }}` |
 | `supervisor_config` | Content of `supervisord.conf` | `""` |
+| `supervisor_config_owner` | File owner of `supervisor_config` | `{{ supervisor_user }}` |
+| `supervisor_config_group` | File group of `supervisor_config` | `{{ __supervisor_config_group }}` |
+| `supervisor_config_mode` | File mode of `supervisor_config` | `"0600"` |
 | `supervisor_unix_socket_dir` | Path to Unix socket directory | `{{ __supervisor_unix_socket_dir }}` |
 | `supervisor_unix_socket_file` | Path to Unix socket file | `{{ supervisor_unix_socket_dir }}/supervisor.sock` |
 | `supervisor_pid_dir` | Path to PID file directory | `{{ __supervisor_pid_dir }}` |
@@ -32,55 +35,63 @@ See [requirements.yml](requirements.yml).
 
 ## Debian
 
-| Variable | Default |
-|----------|---------|
-| `__supervisor_group` | `root` |
-| `__supervisor_package` | `supervisor` |
-| `__supervisor_service` | `supervisor` |
-| `__supervisor_conf_dir` | `/etc/supervisor` |
-| `__supervisor_conf_d_dir_name` | `conf.d` |
-| `__supervisor_unix_socket_dir` | `/var/run` |
-| `__supervisor_pid_dir` | `/var/run` |
-| `__supervisor_log_dir` | `/var/log/supervisor` |
+```yaml
+---
+__supervisor_group: root
+__supervisor_package: supervisor
+__supervisor_service: supervisor
+__supervisor_conf_dir: "/etc/supervisor"
+__supervisor_conf_d_dir_name: conf.d
+__supervisor_unix_socket_dir: "/var/run"
+__supervisor_pid_dir: "/var/run"
+__supervisor_log_dir: "/var/log/supervisor"
+__supervisor_config_group: root
+```
 
 ## FreeBSD
 
-| Variable | Default |
-|----------|---------|
-| `__supervisor_group` | `wheel` |
-| `__supervisor_package` | `sysutils/py-supervisor` |
-| `__supervisor_service` | `supervisord` |
-| `__supervisor_conf_dir` | `/usr/local/etc/supervisor` |
-| `__supervisor_conf_d_dir_name` | `conf.d` |
-| `__supervisor_unix_socket_dir` | `/var/run/supervisor` |
-| `__supervisor_pid_dir` | `/var/run/supervisor` |
-| `__supervisor_log_dir` | `/var/log/supervisor` |
+```yaml
+---
+__supervisor_group: wheel
+__supervisor_package: sysutils/py-supervisor
+__supervisor_service: supervisord
+__supervisor_conf_dir: "/usr/local/etc/supervisor"
+__supervisor_conf_d_dir_name: conf.d
+__supervisor_unix_socket_dir: "/var/run/supervisor"
+__supervisor_pid_dir: "/var/run/supervisor"
+__supervisor_log_dir: "/var/log/supervisor"
+__supervisor_config_group: wheel
+```
 
 ## OpenBSD
 
-| Variable | Default |
-|----------|---------|
-| `__supervisor_group` | `wheel` |
-| `__supervisor_package` | `supervisor` |
-| `__supervisor_service` | `supervisord` |
-| `__supervisor_conf_dir` | `/etc/supervisor` |
-| `__supervisor_conf_d_dir_name` | `conf.d` |
-| `__supervisor_unix_socket_dir` | `/var/run/supervisor` |
-| `__supervisor_pid_dir` | `/var/run/supervisor` |
-| `__supervisor_log_dir` | `/var/log/supervisor` |
+```yaml
+---
+__supervisor_group: wheel
+__supervisor_package: supervisor
+__supervisor_service: supervisord
+__supervisor_conf_dir: "/etc/supervisor"
+__supervisor_conf_d_dir_name: conf.d
+__supervisor_unix_socket_dir: "/var/run/supervisor"
+__supervisor_pid_dir: "/var/run/supervisor"
+__supervisor_log_dir: "/var/log/supervisor"
+__supervisor_config_group: wheel
+```
 
 ## RedHat
 
-| Variable | Default |
-|----------|---------|
-| `__supervisor_group` | `root` |
-| `__supervisor_package` | `supervisor` |
-| `__supervisor_service` | `supervisord` |
-| `__supervisor_conf_dir` | `/etc` |
-| `__supervisor_conf_d_dir_name` | `supervisord.d` |
-| `__supervisor_unix_socket_dir` | `/run/supervisor` |
-| `__supervisor_pid_dir` | `/run` |
-| `__supervisor_log_dir` | `/var/log/supervisor` |
+```yaml
+---
+__supervisor_group: root
+__supervisor_package: supervisor
+__supervisor_service: supervisord
+__supervisor_conf_dir: "/etc"
+__supervisor_conf_d_dir_name: supervisord.d
+__supervisor_unix_socket_dir: "/run/supervisor"
+__supervisor_pid_dir: "/run"
+__supervisor_log_dir: "/var/log/supervisor"
+__supervisor_config_group: root
+```
 
 # Dependencies
 
