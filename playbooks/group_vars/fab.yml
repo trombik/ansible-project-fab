@@ -309,3 +309,40 @@ os_haproxy_flags:
   RedHat: |
     OPTIONS=""
 haproxy_flags: "{{ os_haproxy_flags[ansible_os_family] }}"
+
+# ___________________________________nginx
+
+project_nginx_root: "{{ fab_manager_repo_dir }}/public"
+nginx_flags: ""
+nginx_config: |
+  worker_processes 1;
+  error_log {{ nginx_error_log_file }};
+  events {
+    worker_connections 1024;
+  }
+  http {
+    include {{ nginx_conf_dir }}/mime.types;
+    access_log {{ nginx_access_log_file }};
+    default_type application/octet-stream;
+    sendfile on;
+    keepalive_timeout 65;
+    server_tokens off;
+
+    server {
+      listen 127.0.0.1:8001;
+      server_name {{ project_fab_manager_default_host.split(':')[0] }};
+      {# ' for vim syntax #}
+      root {{ project_nginx_root }};
+      error_page 404 /404.html;
+      error_page 500 502 503 504 /500.html;
+      location = /500.html {
+      }
+
+      location /packs/static {
+        expires 1y;
+        add_header Cache-Control "public";
+      }
+    }
+  }
+nginx_config_fragments: []
+nginx_htpasswd_users: []
