@@ -108,7 +108,7 @@ bundle exec rake destroy
 ## The application
 
 In `virtualbox` environment, the URL is
-[http://192.168.56.100/](http://192.168.56.100/).
+[https://192.168.56.100/](https://192.168.56.100/).
 
 For the admin account, see
 [virtualbox_credentials.yml](playbooks/group_vars/virtualbox_credentials.yml).

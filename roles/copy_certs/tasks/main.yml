@@ -2,7 +2,7 @@
 
 - name: Create certs directory for haproxy
   ansible.builtin.file:
-    path: /usr/local/etc/ssl/haproxy
+    path: "{{ project_haproxy_cert_dir }}"
     owner: www
     group: wheel
     mode: "0755"
@@ -10,8 +10,8 @@
 
 - name: Copy TLS certs
   ansible.builtin.copy:
-    src: files/fab.mkrsgh.org.pem
-    dest: /usr/local/etc/ssl/haproxy/
+    src: "files/{{ project_fab_manager_cert_file }}"
+    dest: "{{ project_haproxy_cert_dir }}/"
     owner: www
     group: wheel
     mode: "0460"

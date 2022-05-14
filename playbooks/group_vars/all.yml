@@ -1,1 +1,2 @@
 ---
+project_haproxy_cert_dir: /usr/local/etc/ssl/haproxy

@@ -1,6 +1,7 @@
 ---
 
 project_fab_manager_default_host: "fab.mkrsgh.org:443"
+project_fab_manager_cert_file: fab.mkrsgh.org.pem
 project_allow_insecure_http: "false"
 fab_manager_http_schema: https
 
@@ -34,7 +35,7 @@ haproxy_config: |
     http-request redirect scheme https unless acme
 
   frontend https-in
-    bind *:443 ssl crt /usr/local/etc/ssl/haproxy/fab.mkrsgh.org.pem
+    bind *:443 ssl crt {{ project_haproxy_cert_dir }}/{{ project_fab_manager_cert_file }}
     http-request set-header X-Forwarded-Proto https
     default_backend servers
 
