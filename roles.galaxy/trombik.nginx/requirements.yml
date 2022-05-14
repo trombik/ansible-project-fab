@@ -1,0 +1,6 @@
+---
+roles:
+  - name: trombik.x509_certificate
+  - name: trombik.redhat_repo
+collections:
+  - name: community.general

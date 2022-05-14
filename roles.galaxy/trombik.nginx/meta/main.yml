@@ -1,0 +1,35 @@
+---
+galaxy_info:
+  role_name: nginx
+  author: Tomoyuki Sakurai
+  description: Configures nginx
+  company: N/A
+  license: BSD
+  min_ansible_version: 2.0
+  platforms:
+    - name: FreeBSD
+      versions:
+        - 12.2
+        - 13.0
+    - name: OpenBSD
+      versions:
+        - 6.8
+        - 6.9
+    - name: Ubuntu
+      versions:
+        - bionic
+        - focal
+    - name: EL
+      versions:
+        - 7
+    - name: Devuan
+      versions:
+        - beowulf
+    - name: Fedora
+      versions:
+        - 35
+  galaxy_tags:
+    - nginx
+    - ssl
+    - tls
+dependencies: []
