@@ -1,0 +1,9 @@
+---
+
+- name: Create /etc/default/nginx
+  ansible.builtin.template:
+    src: Debian.default.j2
+    dest: /etc/default/nginx
+    validate: sh -n %s
+    backup: yes
+    mode: "0644"
