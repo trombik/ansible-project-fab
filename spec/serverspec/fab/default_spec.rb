@@ -107,7 +107,7 @@ curl_test_option = case test_environment
 describe command "curl #{curl_test_option}" do
   its(:exit_status) { should eq 0 }
   its(:stdout) { should match(/#{Regexp.escape("HTTP/1.1 200 OK")}/) }
-  its(:stdout) { should match(/#{Regexp.escape("<title>Fab-manager</title>")}/) }
+  its(:stdout) { should match(%r{<title>Fab-manager|Makers Siem Reap</title>}) }
   its(:stdout) { should match(/SSL certificate verify ok/) } if test_environment != "virtualbox"
   its(:stdout) { should_not match(/X-Backend: nginx-servers/i) }
   its(:stdout) { should match(/X-Backend: servers/i) }
