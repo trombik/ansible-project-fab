@@ -14,11 +14,12 @@ services = %w[
 ]
 
 ports = [
-  80,
-  443,
-  5000,
-  5432,
-  6379
+  80,   # haproxy
+  443,  # haproxy TLS
+  5000, # rails
+  5432, # postgrsql
+  6379, # redis
+  8001  # nginx
 ]
 
 cert_dir = "/usr/local/etc/ssl/haproxy"
@@ -104,6 +105,8 @@ describe command "curl #{curl_test_option}" do
   its(:stdout) { should match(/#{Regexp.escape("HTTP/1.1 200 OK")}/) }
   its(:stdout) { should match(/#{Regexp.escape("<title>Fab-manager</title>")}/) }
   its(:stdout) { should match(/SSL certificate verify ok/) } if test_environment != "virtualbox"
+  its(:stdout) { should_not match(/X-Backend: nginx-servers/i) }
+  its(:stdout) { should match(/X-Backend: servers/i) }
 end
 
 # test acme backend
@@ -112,4 +115,17 @@ describe command "curl --verbose --header 'Host: fab.mkrsgh.org' http://127.0.0.
   # XXX test HTTP status 503 here because acme backend is only available when
   # acme client is running.
   its(:stdout) { should match(/#{Regexp.escape("HTTP/1.1 503")}/) }
+end
+
+describe command "curl --verbose --insecure --header 'Host: fab.mkrsgh.org' https://127.0.0.1/packs/manifest.json" do
+  its(:exit_status) { should eq 0 }
+  its(:stdout) { should match(/#{Regexp.escape("HTTP/1.1 200")}/) }
+  its(:stdout) { should match(/X-Backend: servers/i) }
+end
+
+describe command "curl --verbose --insecure --header 'Host: fab.mkrsgh.org' https://127.0.0.1/packs/static/no-such-file" do
+  its(:exit_status) { should eq 0 }
+  its(:stdout) { should match(/#{Regexp.escape("HTTP/1.1 404")}/) }
+  its(:stdout) { should match(/X-Backend: nginx-servers/i) }
+  its(:stdout) { should match(/If you are the application owner check the logs for more information/) }
 end
