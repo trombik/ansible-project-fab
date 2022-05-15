@@ -68,7 +68,7 @@ fab_manager_env:
   SMTP_ENABLE_STARTTLS_AUTO: "true"
   SMTP_OPENSSL_VERIFY_MODE: "peer"
   SMTP_CA_FILE: /usr/local/etc/ssl/cert.pem
-  SMTP_TLS: "false"
+  SMTP_TLS: "{{ project_smtp_tls }}"
 
   RAILS_LOCALE: en
   APP_LOCALE: en

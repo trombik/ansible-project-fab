@@ -4,6 +4,7 @@ project_fab_manager_default_host: 192.168.56.100:80
 project_fab_manager_cert_file: localhost.pem
 project_allow_insecure_http: "false"
 fab_manager_http_schema: https
+project_smtp_tls: "false"
 
 haproxy_config: |
   global
