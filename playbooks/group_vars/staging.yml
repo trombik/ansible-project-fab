@@ -4,6 +4,7 @@ project_fab_manager_default_host: "fab.mkrsgh.org:443"
 project_fab_manager_cert_file: fab.mkrsgh.org.pem
 project_allow_insecure_http: "false"
 fab_manager_http_schema: https
+project_smtp_tls: "true"
 
 haproxy_config: |
   global
