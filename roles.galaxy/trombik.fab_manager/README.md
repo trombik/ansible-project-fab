@@ -38,6 +38,7 @@ See an example at [requirements.yml](requirements.yml).
 | `fab_manager_repo_dir` | Path to directory to checkout the source | `{{ fab_manager_home }}/{{ fab_manager_repo_name }}` |
 | `fab_manager_repo_url` | `git` URL of the source | `https://github.com/trombik/fab-manager.git` |
 | `fab_manager_repo_version` | Branch name, tag, or commit to checkout the source | `local` |
+| `fab_manager_git_option` | See below | `{"clone"=>true, "dest"=>"{{ fab_manager_repo_dir }}", "repo"=>"{{ fab_manager_repo_url }}", "version"=>"{{ fab_manager_repo_version }}", "update"=>false}` |
 | `fab_manager_config_dir` | Path to `config` directory | `{{ fab_manager_repo_dir }}/config` |
 | `fab_manager_log_dir` | Path to `log` directory | `{{ fab_manager_repo_dir }}/log` |
 | `fab_manager_env` | A dict of `.env` file content | `{}` |
@@ -55,6 +56,14 @@ See an example at [requirements.yml](requirements.yml).
 | `fab_manager_http_port` | Port number for `fab-manager` to bind | `5000` |
 | `fab_manager_http_schema` | HTTP scheme of the protocol | `http` |
 | `fab_manager_extra_packages` | A list of extra packages to install | `[]` |
+| `fab_manager_restart_handler` | A list of handlers to notify | `[]` |
+
+## `fab_manager_git_option`
+
+This dict is passed to `ansible.builtin.git` `ansible` module as an argument.
+Keys are parameter names of the module.
+[ansible.builtin.git module](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/git_module.html)
+for details.
 
 ## FreeBSD
 
@@ -140,7 +149,12 @@ __fab_manager_packages:
     project_db_admin_password: password
     project_redis_host: 127.0.0.1
     project_es_host: 127.0.0.1  # XXX unused
+    project_rails_env: production
 
+    fab_manager_groups:
+      - ansible
+    fab_manager_restart_handler:
+      - Restart supervisor
     fab_manager_redis_host: "{{ project_redis_host }}"
     fab_manager_db_host: "{{ project_db_host }}"
     fab_manager_db_name: "{{ project_db_name }}"
@@ -170,8 +184,8 @@ __fab_manager_packages:
 
     fab_manager_env:
       # XXX webpack needs a lot of memory
-      NODE_OPTIONS: --max-old-space-size=2048
-      RAILS_ENV: production
+      NODE_OPTIONS: "--max-old-space-size=2048"
+      RAILS_ENV: "{{ project_rails_env }}"
       # see:
       # https://github.com/sleede/fab-manager/blob/master/doc/environment.md
       POSTGRES_HOST: "{{ fab_manager_db_host }}"
@@ -194,8 +208,8 @@ __fab_manager_packages:
       DELIVERY_METHOD: smtp
       SMTP_ADDRESS: 127.0.0.1
       SMTP_PORT: 587
-      SMTP_USER_NAME: ""
-      SMTP_PASSWORD: ""
+      SMTP_USER_NAME: user
+      SMTP_PASSWORD: password
       SMTP_AUTHENTICATION: plain
       SMTP_ENABLE_STARTTLS_AUTO: "true"
       SMTP_OPENSSL_VERIFY_MODE: ""
@@ -220,7 +234,7 @@ __fab_manager_packages:
       UIB_DATE_FORMAT: "yyyy/MM/dd"
       EXCEL_DATE_FORMAT: "dd/mm/yyyy"
 
-      OPENLAB_BASE_URI: https://openprojects.fab-manager.com
+      OPENLAB_BASE_URI: "https://openprojects.fab-manager.com"
       OPENLAB_SSL_VERIFY: "true"
 
       ADMINSYS_EMAIL: "{{ project_fab_manager_admin_user }}"
@@ -400,9 +414,12 @@ __fab_manager_packages:
       [include]
       files = {{ supervisor_conf_d_dir }}/*.conf
 
+      {% set _environment = fab_manager_env.keys() | zip(fab_manager_env.values() | map('regex_replace', '(^.*$)', '\"\\1\"') | map('regex_replace', '%', '%%')) | map('join', '=') | join(',') %}
+      {# ' for vim syntax #}
+
       [program:app]
       user={{ fab_manager_user }}
-      environment=PATH="/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin",HOME={{ fab_manager_home }}
+      environment=PATH="/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin",HOME={{ fab_manager_home }},{{ _environment }}
       directory={{ fab_manager_repo_dir }}
       command=bundle exec rails s puma -p {{ fab_manager_http_port }} -b {{ fab_manager_http_address }}
       stderr_logfile={{ supervisor_log_dir }}/app.err.log
@@ -410,7 +427,7 @@ __fab_manager_packages:
 
       [program:worker]
       user={{ fab_manager_user }}
-      environment=PATH="/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin",HOME={{ fab_manager_home }}
+      environment=PATH="/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin",HOME={{ fab_manager_home }},{{ _environment }}
       directory={{ fab_manager_repo_dir }}
       command=bundle exec sidekiq -C {{ fab_manager_repo_dir }}/config/sidekiq.yml
       stderr_logfile={{ supervisor_log_dir }}/worker.err.log
@@ -499,7 +516,7 @@ __fab_manager_packages:
 
       backend servers
         option forwardfor
-        server server1 {{ fab_manager_http_address }}:{{ fab_manager_http_port }} maxconn 32 check inter 30000
+        server server1 {{ fab_manager_http_address }}:{{ fab_manager_http_port }} maxconn 32 check inter 1000
 
       frontend stats
         bind *:8404
