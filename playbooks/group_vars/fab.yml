@@ -65,7 +65,7 @@ fab_manager_env:
   SMTP_USER_NAME: "{{ project_smtp_user_name }}"
   SMTP_PASSWORD: "{{ project_smtp_password }}"
   SMTP_AUTHENTICATION: "{{ project_smtp_authentication }}"
-  SMTP_ENABLE_STARTTLS_AUTO: "true"
+  SMTP_ENABLE_STARTTLS_AUTO: "false"
   SMTP_OPENSSL_VERIFY_MODE: "peer"
   SMTP_CA_FILE: /usr/local/etc/ssl/cert.pem
   SMTP_TLS: "{{ project_smtp_tls }}"
