@@ -21,7 +21,7 @@ jobs:
 
   lint:
     needs: pre_build
-    if: ${{ needs.pre_build.outputs.should_skip != 'true' || github.ref_name == 'main' || github.ref_name == 'master' }}
+    if: ${{ needs.pre_build.outputs.should_skip != 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -46,10 +46,7 @@ jobs:
     needs:
       - pre_build
       - lint
-    # always run CI in main (or master) branch so that cache in main can be
-    # reused in pull_request or push. this reduces the number of box download.
-    # vagrant cloud throttles requests after many download requests.
-    if: ${{ needs.pre_build.outputs.should_skip != 'true' || github.ref_name == 'main' || github.ref_name == 'master' }}
+    if: ${{ needs.pre_build.outputs.should_skip != 'true' }}
     runs-on: macos-10.15
     outputs:
       instances: ${{ steps.set-instances.outputs.instances }}
@@ -66,14 +63,16 @@ jobs:
       - name: Set instances for matrix build
         id: set-instances
         run: |
+          CACHE_EPOCH=1
           echo ::set-output name=instances::$(bundle exec kitchen list -j | jq --compact-output 'map(.instance)')
+          echo ::set-output name=cache-epoch::${CACHE_EPOCH}
 
   kitchen:
     runs-on: macos-10.15
     needs:
       - pre_build
       - list
-    if: ${{ needs.pre_build.outputs.should_skip != 'true' || github.ref_name == 'main' || github.ref_name == 'master' }}
+    if: ${{ needs.pre_build.outputs.should_skip != 'true' }}
     strategy:
       matrix:
         instance: ${{ fromJSON(needs.list.outputs.instances) }}
@@ -98,9 +97,9 @@ jobs:
           # the file has other configuration options, such as log level, and
           # when you change options not related to vagrant boxes, cache
           # becomes invalid.
-          key: vagrant-boxes-${{ hashFiles('**/.kitchen.yml') }}-${{ matrix.instance }}
+          key: vagrant-boxes-${{ hashFiles('**/.kitchen.yml') }}-${{ needs.list.outputs.cache-epoch }}-${{ matrix.instance }}
           restore-keys: |
-            vagrant-boxes-${{ hashFiles('**/.kitchen.yml') }}-${{ matrix.instance }}
+            vagrant-boxes-${{ hashFiles('**/.kitchen.yml') }}-${{ needs.list.outputs.cache-epoch }}-${{ matrix.instance }}
 
       - name: Show vagrant version
         run: |
