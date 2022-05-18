@@ -1,0 +1,17 @@
+---
+
+- name: Create dump script
+  ansible.builtin.template:
+    src: fab_dump.j2
+    dest: /usr/local/bin/fab_dump
+    mode: "0755"
+    owner: root
+    group: wheel
+
+- name: Create dump directory
+  ansible.builtin.file:
+    path: "{{ project_dump_dir }}"
+    owner: "{{ fab_manager_user }}"
+    group: wheel
+    mode: "0770"
+    state: directory

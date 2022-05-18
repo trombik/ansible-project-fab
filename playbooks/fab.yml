@@ -23,4 +23,5 @@
     - role: trombik.nginx
     - role: copy_certs
     - role: trombik.haproxy
+    - role: fab_dump
   vars:
