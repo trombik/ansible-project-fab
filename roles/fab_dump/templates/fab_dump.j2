@@ -1,0 +1,45 @@
+#!/bin/sh
+
+# XXX make sure .pgpass exists and you can connect the database without
+# password. see:
+# https://www.postgresql.org/docs/13/libpq-pgpass.html
+#
+# .pgpass looks like this:
+# 127.0.0.1:5432:fab:fab:password
+
+# XXX this script is not atomic. some files might NOT be archived.
+
+# XXX to support atomic dump, fab_manager must implement APIs to "pause" and
+# "restart" jobs.
+
+if [ ! -z "${DEBUG}" ]; then
+  set -x
+fi
+set -e
+
+: ${DUMP_DIR="."}
+: ${FABMANAGER_DIR="/usr/local/fab/fab_manager"}
+: ${FABMANAGER_DATABASE_NAME="fab"}
+: ${FABMANAGER_DATABASE_HOST="127.0.0.1"}
+: ${FABMANAGER_DATABASE_PORT="5432"}
+: ${FABMANAGER_DATABASE_USER="fab"}
+: ${FABMANAGER_DATABASE_FLAGS=""}
+
+DUMP_TIME=`date +%Y%m%d%H%M`
+ARCHIVE_TARGETS_DEFAULT="public/uploads"
+
+# XXX these undocumented dirctories keep files. a cluse is in .gitignore
+ARCHIVE_TARGETS_OPTIONAL="
+  accounting
+  exports
+  imports
+  invoices
+  payment_schedules
+  proof_of_identity_files"
+ARCHIVE_TARGETS="${ARCHIVE_TARGETS_DEFAULT} ${ARCHIVE_TARGETS_OPTIONAL}"
+
+pg_dump --user "${FABMANAGER_DATABASE_USER}" --host "${FABMANAGER_DATABASE_HOST}" --port "${FABMANAGER_DATABASE_PORT}" ${FABMANAGER_DATABASE_FLAGS} "${FABMANAGER_DATABASE_NAME}" > "${DUMP_DIR}/${DUMP_TIME}.sql"
+mkdir -p "${FABMANAGER_DIR}/${ARCHIVE_TARGETS_OPTIONAL}"
+tar -cvzf "${DUMP_DIR}/${DUMP_TIME}.tgz" -C "${FABMANAGER_DIR}" ${ARCHIVE_TARGETS}
+ln -sf "${DUMP_DIR}/${DUMP_TIME}.tgz" "${DUMP_DIR}/latest.tgz"
+ln -sf "${DUMP_DIR}/${DUMP_TIME}.sql" "${DUMP_DIR}/latest.sql"
