@@ -37,8 +37,12 @@ haproxy_config: |
     bind *:80
     acl acme  path -m beg /.well-known/acme-challenge/
 
-    # as we do not host other hostname, reject
-    http-request deny unless { req.hdr(host) -m str fab.mkrsgh.org }
+    acl is_valid_hostname req.hdr(host) -m str {{ project_fab_manager_default_host.split(':')[0] }}
+    {# ' for vim syntax #}
+
+    # as we do not host other hostname, reject if Host: does not matches
+    # expected hostname
+    http-request deny unless is_valid_hostname
 
     # we do not support HTTP/1.0
     http-request deny if HTTP_1.0
@@ -53,8 +57,12 @@ haproxy_config: |
     # X-Sorry is a header to test sorry-servers. used in specs
     acl is_under_maintenance req.hdr(x-sorry) -m found
 
-    # as we do not host other hostname, reject
-    http-request deny unless { req.hdr(host) -m str fab.mkrsgh.org }
+    acl is_valid_hostname req.hdr(host) -m str {{ project_fab_manager_default_host.split(':')[0] }}
+    {# ' for vim syntax #}
+
+    # as we do not host other hostname, reject if Host: does not matches
+    # expected hostname
+    http-request deny unless is_valid_hostname
 
     # we do not support HTTP/1.0
     http-request deny if HTTP_1.0
