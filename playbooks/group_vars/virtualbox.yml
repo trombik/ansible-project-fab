@@ -32,12 +32,26 @@ haproxy_config: |
   frontend http-in
     bind *:80
     acl acme  path -m beg /.well-known/acme-challenge/
+
+    # as we do not host other hostname, reject
+    http-request deny unless { req.hdr(host) -m str fab.mkrsgh.org }
+
+    # we do not support HTTP/1.0
+    http-request deny if HTTP_1.0
+
     http-request redirect scheme https unless acme
     use_backend acme-servers if acme
 
   frontend https-in
     bind *:443 ssl crt {{ project_haproxy_cert_dir }}/{{ project_fab_manager_cert_file }}
     acl is_public path_beg /packs/static/
+
+    # as we do not host other hostname, reject
+    http-request deny unless { req.hdr(host) -m str fab.mkrsgh.org }
+
+    # we do not support HTTP/1.0
+    http-request deny if HTTP_1.0
+
     default_backend servers
     http-request set-header X-Forwarded-Proto https
     use_backend nginx-servers if is_public
