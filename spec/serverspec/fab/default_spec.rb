@@ -147,6 +147,7 @@ end
     its(:exit_status) { should eq 0 }
     its(:stdout) { should match(/#{Regexp.escape("HTTP/1.1 503")}/) }
     its(:stdout) { should match(/X-Backend: sorry-servers/i) }
+    its(:stdout) { should match(/#{Regexp.escape("Down for maintenance...")}/) }
   end
 end
 
