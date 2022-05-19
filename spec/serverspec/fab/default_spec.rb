@@ -5,6 +5,13 @@ require_relative "../spec_helper"
 default_config_dir = "/usr/local/etc"
 default_user = "root"
 default_group = "wheel"
+http_host_name = case test_environment
+                 when "virtualbox"
+                   "192.168.56.100"
+                 else
+                   "fab.mkrsgh.org"
+                 end
+http_header_host = "Host: #{http_host_name}"
 
 workers = %w[
   app
@@ -92,17 +99,17 @@ describe file "#{cert_dir}/#{cert_file}" do
 end
 
 # test HTTP redirect to HTTPS
-describe command "curl --verbose --header 'Host: fab.mkrsgh.org' http://127.0.0.1" do
+describe command "curl --verbose --header #{http_header_host.shellescape} http://127.0.0.1" do
   its(:exit_status) { should eq 0 }
   its(:stdout) { should match(/#{Regexp.escape("HTTP/1.1 302")}/) }
-  its(:stdout) { should match(/#{Regexp.escape("location: https://fab.mkrsgh.org/")}/) }
+  its(:stdout) { should match(/#{Regexp.escape("location: https://#{http_host_name}/")}/) }
 end
 
 curl_test_option = case test_environment
                    when "virtualbox"
-                     "--verbose --insecure --header 'Host: fab.mkrsgh.org' https://127.0.0.1"
+                     "--verbose --insecure --header #{http_header_host.shellescape} https://127.0.0.1"
                    else
-                     "--verbose --cacert #{cert_file_full_path.shellescape} --header 'Host: fab.mkrsgh.org' --connect-to 127.0.0.1:443 https://fab.mkrsgh.org"
+                     "--verbose --cacert #{cert_file_full_path.shellescape} --header #{http_header_host.shellescape} --connect-to 127.0.0.1:443 https://#{http_host_name.shellescape}"
                    end
 describe command "curl #{curl_test_option}" do
   its(:exit_status) { should eq 0 }
@@ -114,20 +121,20 @@ describe command "curl #{curl_test_option}" do
 end
 
 # test acme backend
-describe command "curl --verbose --header 'Host: fab.mkrsgh.org' http://127.0.0.1/.well-known/acme-challenge/" do
+describe command "curl --verbose --header #{http_header_host.shellescape} http://127.0.0.1/.well-known/acme-challenge/" do
   its(:exit_status) { should eq 0 }
   # XXX test HTTP status 503 here because acme backend is only available when
   # acme client is running.
   its(:stdout) { should match(/#{Regexp.escape("HTTP/1.1 503")}/) }
 end
 
-describe command "curl --verbose --insecure --header 'Host: fab.mkrsgh.org' https://127.0.0.1/packs/manifest.json" do
+describe command "curl --verbose --insecure --header #{http_header_host.shellescape} https://127.0.0.1/packs/manifest.json" do
   its(:exit_status) { should eq 0 }
   its(:stdout) { should match(/#{Regexp.escape("HTTP/1.1 200")}/) }
   its(:stdout) { should match(/X-Backend: servers/i) }
 end
 
-describe command "curl --verbose --insecure --header 'Host: fab.mkrsgh.org' https://127.0.0.1/packs/static/no-such-file" do
+describe command "curl --verbose --insecure --header #{http_header_host.shellescape} https://127.0.0.1/packs/static/no-such-file" do
   its(:exit_status) { should eq 0 }
   its(:stdout) { should match(/#{Regexp.escape("HTTP/1.1 404")}/) }
   its(:stdout) { should match(/X-Backend: nginx-servers/i) }
@@ -136,7 +143,7 @@ end
 
 # test if sorry-servers works
 ["/", "/foo"].each do |path|
-  describe command "curl --verbose --insecure --header 'Host: fab.mkrsgh.org' --header 'X-Sorry: any_value' https://127.0.0.1#{path.shellescape}" do
+  describe command "curl --verbose --insecure --header #{http_header_host.shellescape} --header 'X-Sorry: any_value' https://127.0.0.1#{path.shellescape}" do
     its(:exit_status) { should eq 0 }
     its(:stdout) { should match(/#{Regexp.escape("HTTP/1.1 503")}/) }
     its(:stdout) { should match(/X-Backend: sorry-servers/i) }
