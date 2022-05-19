@@ -5,6 +5,7 @@ project_redis_host: 127.0.0.1
 project_es_host: 127.0.0.1  # XXX unused
 project_rails_env: production
 project_dump_dir: "{{ fab_manager_home }}/backup"
+project_maintenance_site_dir: "{{ fab_manager_home }}/sorry"
 
 fab_manager_groups:
   - ansible
@@ -343,6 +344,18 @@ nginx_config: |
       location /packs/static {
         expires 1y;
         add_header Cache-Control "public";
+      }
+    }
+
+    server {
+      listen 127.0.0.1:8002;
+      root {{ project_maintenance_site_dir }};
+      error_page 503 /index.html;
+      location / {
+        return 503;
+      }
+      location = /index.html {
+        internal;
       }
     }
   }
