@@ -134,6 +134,15 @@ describe command "curl --verbose --insecure --header 'Host: fab.mkrsgh.org' http
   its(:stdout) { should match(/If you are the application owner check the logs for more information/) }
 end
 
+# test if sorry-servers works
+["/", "/foo"].each do |path|
+  describe command "curl --verbose --insecure --header 'Host: fab.mkrsgh.org' --header 'X-Sorry: any_value' https://127.0.0.1#{path.shellescape}" do
+    its(:exit_status) { should eq 0 }
+    its(:stdout) { should match(/#{Regexp.escape("HTTP/1.1 503")}/) }
+    its(:stdout) { should match(/X-Backend: sorry-servers/i) }
+  end
+end
+
 describe file "#{default_config_dir}/supervisor/supervisord.conf" do
   it { should exist }
   it { should be_file }

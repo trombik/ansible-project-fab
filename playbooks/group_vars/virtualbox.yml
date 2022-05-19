@@ -6,6 +6,10 @@ project_allow_insecure_http: "false"
 fab_manager_http_schema: https
 project_smtp_tls: "false"
 
+# when yes, the site is under maintenance, showing maintenance page. when no,
+# the site works as usual.
+project_maintenance_site_enabled: no
+
 haproxy_config: |
   global
     daemon
@@ -46,15 +50,23 @@ haproxy_config: |
     bind *:443 ssl crt {{ project_haproxy_cert_dir }}/{{ project_fab_manager_cert_file }}
     acl is_public path_beg /packs/static/
 
+    # X-Sorry is a header to test sorry-servers. used in specs
+    acl is_under_maintenance req.hdr(x-sorry) -m found
+
     # as we do not host other hostname, reject
     http-request deny unless { req.hdr(host) -m str fab.mkrsgh.org }
 
     # we do not support HTTP/1.0
     http-request deny if HTTP_1.0
 
+    {% if project_maintenance_site_enabled %}
+    default_backend sorry-servers
+    {% else %}
     default_backend servers
+    {% endif %}
     http-request set-header X-Forwarded-Proto https
     use_backend nginx-servers if is_public
+    use_backend sorry-servers if is_under_maintenance
 
   backend servers
     option forwardfor
@@ -70,6 +82,11 @@ haproxy_config: |
     option forwardfor
     http-response set-header X-Backend %b
     server nginx1 127.0.0.1:8001 check inter 60000
+
+  backend sorry-servers
+    option forwardfor
+    http-response set-header X-Backend %b
+    server nginx1 127.0.0.1:8002 check inter 60000
 
   frontend stats
     bind *:8404

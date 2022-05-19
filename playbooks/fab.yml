@@ -20,6 +20,7 @@
     - role: trombik.language_ruby
     - role: trombik.fab_manager
     - role: trombik.supervisor
+    - role: deploy_maintenance_site
     - role: trombik.nginx
     - role: copy_certs
     - role: trombik.haproxy

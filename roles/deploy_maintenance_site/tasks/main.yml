@@ -1,0 +1,7 @@
+---
+
+- name: Deploy maintenance page
+  ansible.builtin.git:
+    repo: https://github.com/trombik/Simple-Maintenance-Page
+    dest: "{{ project_maintenance_site_dir }}"
+    version: master
